@@ -11,6 +11,7 @@
     <PackageReference Include="DSharpPlus" Version="4.4.2" />
     <PackageReference Include="DSharpPlus.Lavalink" Version="4.4.2" />
     <PackageReference Include="DSharpPlus.SlashCommands" Version="4.4.2" />
+    <PackageReference Include="FFMpegCore" Version="5.1.0" />
     <PackageReference Include="ImageProcessor" Version="2.9.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
@@ -26,6 +27,9 @@
     </Reference>
     <Reference Include="StutterMosher">
       <HintPath>..\..\..\..\Downloads\StutterMosher-master\StutterMosher-master\StutterMosher\bin\Release\net6.0\StutterMosher.dll</HintPath>
+    </Reference>
+    <Reference Include="Vdcrpt">
+      <HintPath>..\..\..\..\Downloads\vdcrpt-main\vdcrpt-main\src\Vdcrpt\bin\Release\net5.0\Vdcrpt.dll</HintPath>
     </Reference>
   </ItemGroup>
 

@@ -24,6 +24,9 @@ using System.Data;
 using System.Drawing.Imaging;
 using static System.Net.Mime.MediaTypeNames;
 using StutterMosher;
+using Vdcrpt;
+using Vdcrpt.Desktop;
+using FFMpegCore;
 
 namespace RenBotSharp
 {
@@ -583,43 +586,49 @@ namespace RenBotSharp
                 Console.WriteLine(ex.ToString());
             }
         }
-        [SlashCommand("datamosh", "Datamosh a file (gif or video)")]
-        private async Task Datamosh(InteractionContext ctx, [Option("file", "Media to datamosh (up to 10 MB)")] DiscordAttachment attachment, [Option("intensity", "Intensity of corruption, ranging from 1-10 (default:3)")] long intensity = 3)
+        [SlashCommand("datamosh", "Datamosh a video")]
+        private async Task Datamosh(InteractionContext ctx, [Option("video", "Media to datamosh (up to 10 MB)")] DiscordAttachment attachment,
+            [Choice("Melt", 0)]
+            [Choice("Jitter", 1)]
+            [Choice("Source Engine", 2)]
+            [Choice("Subtle", 3)]
+            [Choice("Trash", 4)]
+            [Choice("Legacy", 5)]
+            [Option("preset", "Preset to use (default: Melt)")] long preset = 0)
         {
-            if (intensity < 1 || intensity > 10)
+            try
             {
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Intensity is not in the range of 1 to 1000").AsEphemeral());
-                return;
-            }
-
-            if (attachment.FileSize > 10000000)
-            {
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("File can't be higher than 10 MB").AsEphemeral());
-                return;
-            }
-            if (attachment.MediaType.Contains("video"))
-            {
-                await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder());
-
-                HttpResponseMessage a = await client.GetAsync(attachment.Url);
-
-                byte[] sexo = await a.Content.ReadAsByteArrayAsync();
-
-                using (MemoryStream inStream = new MemoryStream(await a.Content.ReadAsByteArrayAsync()))
+                if (attachment.FileSize > 10000000)
                 {
-                    using (MemoryStream outStream = new MemoryStream())
-                    {
-                        StutterMosher.Mosher mosher = new Mosher(inStream, outStream);
+                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("File can't be higher than 10 MB").AsEphemeral());
+                    return;
+                }
+                if (attachment.MediaType.Contains("video"))
+                {
+                    await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder());
 
-                        mosher.Mosh((int)intensity);
+                    HttpResponseMessage a = await client.GetAsync(attachment.Url);
 
-                        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Here is your datamoshed file!").AddFile(attachment.FileName, outStream));
-                    }
+                    byte[] sexo = await a.Content.ReadAsByteArrayAsync();
+
+                    File.WriteAllBytes($"{Environment.CurrentDirectory}\\temp\\input.mp4", sexo);
+
+                    var video = VdcrptR.Video.Load($"{Environment.CurrentDirectory}\\temp\\input.mp4");
+
+                    video.Transform(VdcrptR.Effects.Repeat(Preset.DefaultPresets[(int)preset].Iterations, Preset.DefaultPresets[(int)preset].BurstSize, Preset.DefaultPresets[(int)preset].MinBurstLength, Preset.DefaultPresets[(int)preset].UseLengthRange ? Preset.DefaultPresets[(int)preset].MaxBurstLength : Preset.DefaultPresets[(int)preset].MinBurstLength));
+
+                    video.Save($"{Environment.CurrentDirectory}\\temp\\output.mp4");
+
+                    await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Here is your datamoshed video!").AddFile($"output.mp4", new MemoryStream(File.ReadAllBytes($"{Environment.CurrentDirectory}\\temp\\output.mp4"))));
+                }
+                else
+                {
+                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("The file you provided is not a video or gif").AsEphemeral());
                 }
             }
-            else
+            catch (Exception ex)
             {
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("The file you provided is not a video or gif").AsEphemeral());
+                Console.WriteLine(ex.ToString());
             }
         }
     }
