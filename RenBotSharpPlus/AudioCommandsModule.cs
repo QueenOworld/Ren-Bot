@@ -300,7 +300,7 @@ namespace RenBotSharp
             }
 
             await conn.StopAsync();
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Resumed Audio!"));
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Stopped Audio!"));
         }
 
         [SlashCommand("vcwisdom", "Ren Bot joins vc and gives his wisdom through RTS")]

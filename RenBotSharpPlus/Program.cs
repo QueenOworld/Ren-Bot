@@ -221,17 +221,17 @@ namespace RenBotSharp
         {
             DiscordActivity activity = new DiscordActivity();
 
-            DiscordGuild pfs = Discord.Guilds[817559120910614570];
-
-            string MemberName = pfs.Members.ElementAt(RandomNumberGenerator.GetInt32(0, pfs.Members.Count)).Value.DisplayName;
-
             int type = RandomNumberGenerator.GetInt32(0, 6);
             if (type == 4) { type = 5; }
             activity.ActivityType = (ActivityType)type;
 
-            activity.Name = Settings.Statuses[RandomNumberGenerator.GetInt32(0, Settings.Statuses.Length)].Replace("${Mem}", MemberName);
+            activity.Name = Settings.Statuses[RandomNumberGenerator.GetInt32(0, Settings.Statuses.Length)].Replace("${Mem}", RandomMemberName());
 
             await Discord.UpdateStatusAsync(activity);
+        }
+        private static string RandomMemberName()
+        {
+            return Discord.Guilds[817559120910614570].Members.ElementAt(RandomNumberGenerator.GetInt32(0, Discord.Guilds[817559120910614570].Members.Count)).Value.DisplayName;
         }
     }
 }

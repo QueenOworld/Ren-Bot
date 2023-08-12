@@ -23,6 +23,7 @@ using System.Drawing.Drawing2D;
 using System.Data;
 using System.Drawing.Imaging;
 using static System.Net.Mime.MediaTypeNames;
+using StutterMosher;
 
 namespace RenBotSharp
 {
@@ -432,7 +433,7 @@ namespace RenBotSharp
         }
 
         [SlashCommand("content-awareness-filter", "Carves an image based on the amount you give it")]
-        private async Task ContentAwarenessFilter(InteractionContext ctx, [Option("image", "Image to carve")] DiscordAttachment attachment, [Option("carve-amount", "ranges from 1 to 2000 (default: 1000)")] long amount = 1000)
+        private async Task ContentAwarenessFilter(InteractionContext ctx, [Option("image", "Image to carve")] DiscordAttachment attachment, [Option("carve-amount", "ranges from 1 to 2000 (default: 1000)")] long amount = 1000, [Option("rescale", "whether to rescale the image to its orginal size or not (default: false)")] bool rescale = false)
         {
             ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder());
 
@@ -465,9 +466,20 @@ namespace RenBotSharp
                         {
                             using (ImageFactory imageFactory = new ImageFactory(preserveExifData: true))
                             {
-                                imageFactory.Load(inStream)
-                                            .Format(new ImageProcessor.Imaging.Formats.PngFormat())
-                                            .Save(outStream);
+                                if (rescale)
+                                {
+                                    ResizeLayer layer = new ResizeLayer(new System.Drawing.Size((int)attachment.Width, (int)attachment.Height), ResizeMode.Stretch);
+                                    imageFactory.Load(inStream)
+                                                .Format(new ImageProcessor.Imaging.Formats.PngFormat())
+                                                .Resize(layer)
+                                                .Save(outStream);
+                                }
+                                else
+                                {
+                                    imageFactory.Load(inStream)
+                                                .Format(new ImageProcessor.Imaging.Formats.PngFormat())
+                                                .Save(outStream);
+                                }
 
                                 await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Here is your carved image!").AddFile("output.png", outStream));
                             }
@@ -569,6 +581,45 @@ namespace RenBotSharp
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
+            }
+        }
+        [SlashCommand("datamosh", "Datamosh a file (gif or video)")]
+        private async Task Datamosh(InteractionContext ctx, [Option("file", "Media to datamosh (up to 10 MB)")] DiscordAttachment attachment, [Option("intensity", "Intensity of corruption, ranging from 1-10 (default:3)")] long intensity = 3)
+        {
+            if (intensity < 1 || intensity > 10)
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Intensity is not in the range of 1 to 1000").AsEphemeral());
+                return;
+            }
+
+            if (attachment.FileSize > 10000000)
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("File can't be higher than 10 MB").AsEphemeral());
+                return;
+            }
+            if (attachment.MediaType.Contains("video"))
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder());
+
+                HttpResponseMessage a = await client.GetAsync(attachment.Url);
+
+                byte[] sexo = await a.Content.ReadAsByteArrayAsync();
+
+                using (MemoryStream inStream = new MemoryStream(await a.Content.ReadAsByteArrayAsync()))
+                {
+                    using (MemoryStream outStream = new MemoryStream())
+                    {
+                        StutterMosher.Mosher mosher = new Mosher(inStream, outStream);
+
+                        mosher.Mosh((int)intensity);
+
+                        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Here is your datamoshed file!").AddFile(attachment.FileName, outStream));
+                    }
+                }
+            }
+            else
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("The file you provided is not a video or gif").AsEphemeral());
             }
         }
     }
