@@ -1,3 +1,4 @@
+using StutterMosher;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +9,35 @@ namespace VdcrptR
     // TODO: Note at top of Video.cs also applies here. Don't build anything new with this, it's going to be redone
     public static class Effects
     {
+        public static Action<List<byte>> Mosh(int iterations)
+        {
+            return data =>
+            {
+                using (var istream = new MemoryStream(data.ToArray()))
+                using (var ostream = new MemoryStream())
+                {
+                    bool iFrameYet = false;
+                    while (true)
+                    {
+                        Frame frame = Frame.ReadFromStream(istream);
+                        if (frame == null)
+                            break;
+                        if (!iFrameYet)
+                        {
+                            frame.WriteToStream(ostream);
+                            if (frame.IsIFrame) iFrameYet = true;
+                        }
+                        else if (frame.IsPFrame)
+                        {
+                            for (int n = 0; n < iterations; n++)
+                                frame.WriteToStream(ostream);
+                        }
+                    }
+                    data.Clear();
+                    data.AddRange(ostream.ToArray());
+                }
+            };
+        }
         public static Action<List<byte>> Repeat(int iterations,
             int chunkSize,
             int minRepetitions,
