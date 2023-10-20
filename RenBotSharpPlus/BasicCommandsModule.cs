@@ -314,5 +314,15 @@ namespace RenBotSharp
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"*{ctx.User.Username} sexes {user.Username} professionally*"));
             }
         }
+        [SlashCommand("uptime", "Tells you how long Ren Bot has been running since last startup")]
+        private async Task Uptime(InteractionContext ctx)
+        {
+            DateTime currentTime = DateTime.UtcNow;
+            long CurrentTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
+
+            long StartupTime = long.Parse(System.IO.File.ReadAllText($"{Environment.CurrentDirectory}\\Startup.Ren"));
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"I've been running for **{CurrentTime - StartupTime}** seconds without crashing."));
+        }
     }
 }

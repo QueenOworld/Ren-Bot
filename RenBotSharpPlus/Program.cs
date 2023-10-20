@@ -24,6 +24,8 @@ namespace RenBotSharp
         public static CleverBot clever = new CleverBot();
         static async Task Main(string[] args)
         {
+            Console.Title = "Ren Bot :>";
+
             foreach (string i in File.ReadLines($"{Environment.CurrentDirectory}\\Talky.Ren"))
             {
                 string[] pair = i.Split(' ');
@@ -40,7 +42,8 @@ namespace RenBotSharp
                 TokenType = TokenType.Bot,
                 Intents = DiscordIntents.All,
                 MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Debug,
-                MessageCacheSize = 1024
+                MessageCacheSize = 1024,
+                AlwaysCacheMembers = true
             });
 
             var endpoint = new ConnectionEndpoint
@@ -63,10 +66,12 @@ namespace RenBotSharp
             slash.RegisterCommands<BasicCommandsModule>(864223405774602260);
             slash.RegisterCommands<AudioCommandsModule>(864223405774602260);
             slash.RegisterCommands<ImageCommandsModule>(864223405774602260);
+            slash.RegisterCommands<BankCommandsModule>(864223405774602260);
 #else
             slash.RegisterCommands<BasicCommandsModule>();
             slash.RegisterCommands<AudioCommandsModule>();
             slash.RegisterCommands<ImageCommandsModule>();
+            slash.RegisterCommands<BankCommandsModule>();
 #endif
 
             Discord.MessageDeleted += async (s, e) =>
@@ -80,7 +85,7 @@ namespace RenBotSharp
                 {
                     if (Settings.TalkyServers[e.Guild.Id])
                     {
-                        if (e.Message.ChannelId == 1009900125818208276 || e.Message.ChannelId == 891136812091838514 || e.Message.ChannelId == 817559757249314816  || e.Message.ChannelId == 1133010507712974858)
+                        if (e.Message.ChannelId == 1009900125818208276 || e.Message.ChannelId == 891136812091838514 || e.Message.ChannelId == 817559757249314816  || e.Message.ChannelId == 1133010507712974858 || e.Message.ChannelId == 798294820568956940 || e.Message.ChannelId == 1010386646987980830 || e.Message.ChannelId == 853768477750722602)
                         {
                             if (!e.Message.Author.IsBot)
                             {
@@ -203,10 +208,41 @@ namespace RenBotSharp
 
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder().AddEmbed(embed).AddComponents(new DiscordComponent[] { newColor }));
                 }
+                else if (e.Id == "make_new_bank_account")
+                {
+                    DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
+                    {
+                        Title = e.User.Username,
+                        Description = $"Created an account!",
+                        Color = new DiscordColor(String.Format("#{0:X6}", RandomNumberGenerator.GetInt32(0, 0x1000000))),
+                        Footer = new DiscordEmbedBuilder.EmbedFooter() { IconUrl = e.User.AvatarUrl }
+                    };
+
+                    Directory.CreateDirectory($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}");
+
+                    File.WriteAllText($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}\\Money.Ren", "0.00");
+
+                    File.WriteAllText($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}\\Safe.Ren", "0.00");
+
+                    File.WriteAllText($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}\\StealCooldown.Ren", "0");
+
+                    File.WriteAllText($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}\\SafeCooldown.Ren", "0");
+
+                    DateTime currentTime = DateTime.UtcNow;
+                    long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
+
+                    File.WriteAllText($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}\\Stash.Ren", unixTime.ToString());
+
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder().AddEmbed(embed));
+                }
             };
 
             await Discord.ConnectAsync();
             await lavalink.ConnectAsync(lavalinkConfig); // Make sure this is after Discord.ConnectAsync().
+
+            DateTime currentTime = DateTime.UtcNow;
+
+            File.WriteAllText($"{Environment.CurrentDirectory}\\Startup.Ren", ((DateTimeOffset)currentTime).ToUnixTimeSeconds().ToString());
 
             await Task.Delay(1000);
 

@@ -88,10 +88,6 @@ namespace RenBotSharp
                                         .Format(new ImageProcessor.Imaging.Formats.PngFormat())
                                         .Resize(new System.Drawing.Size((int)(attachment.Width/(100/quality)), (int)(attachment.Height/(100/quality))))
                                         .Save(outStream);
-                            imageFactory.Load(outStream)
-                                        .Format(new ImageProcessor.Imaging.Formats.PngFormat())
-                                        .Resize(new System.Drawing.Size((int)attachment.Width, (int)attachment.Height))
-                                        .Save(outStream);
                         }
 
                         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Here is your compressed image!").AddFile("output.png", outStream));
@@ -101,35 +97,6 @@ namespace RenBotSharp
             else
             {
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("The file you provided is not an image").AsEphemeral());
-            }
-        }
-        private Stream resizeImage(Stream stream,
-                         int width, int height)
-        {
-            System.Drawing.Image image = System.Drawing.Image.FromStream(stream);
-
-            System.Drawing.Image thumbnail = new Bitmap(width, height);
-            System.Drawing.Graphics graphic =
-                         System.Drawing.Graphics.FromImage(thumbnail);
-
-            graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            graphic.SmoothingMode = SmoothingMode.HighQuality;
-            graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
-            graphic.CompositingQuality = CompositingQuality.HighQuality;
-
-            graphic.DrawImage(image, 0, 0, width, height);
-
-            System.Drawing.Imaging.ImageCodecInfo[] info =
-                             ImageCodecInfo.GetImageEncoders();
-            EncoderParameters encoderParameters;
-            encoderParameters = new EncoderParameters(1);
-            encoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality,
-                             100L);
-
-            using (MemoryStream outStream = new MemoryStream())
-            {
-                thumbnail.Save(outStream, info[1], encoderParameters);
-                return outStream;
             }
         }
         [SlashCommand("wide", "Widens an image")]
@@ -592,43 +559,79 @@ namespace RenBotSharp
             [Choice("Jitter", 1)]
             [Choice("Source Engine", 2)]
             [Choice("Subtle", 3)]
-            [Choice("Trash", 4)]
-            [Choice("Legacy", 5)]
-            [Option("preset", "Preset to use (default: Melt)")] long preset = 0)
+            [Choice("Many Artifacts", 4)]
+            [Choice("Trash", 5)]
+            [Choice("Legacy", 6)]
+            [Choice("Death", 7)]
+            [Choice("Standard Subtle", 8)]
+            [Choice("Standard", 9)]
+            [Choice("Standard Intense", 11)]
+            [Option("preset", "Preset to use (default: Standard)")] long preset = 9)
         {
-            try
+            if (attachment.FileSize > 10000000)
             {
-                if (attachment.FileSize > 10000000)
-                {
-                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("File can't be higher than 10 MB").AsEphemeral());
-                    return;
-                }
-                if (attachment.MediaType.Contains("video"))
-                {
-                    await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder());
-
-                    HttpResponseMessage a = await client.GetAsync(attachment.Url);
-
-                    byte[] sexo = await a.Content.ReadAsByteArrayAsync();
-
-                    File.WriteAllBytes($"{Environment.CurrentDirectory}\\temp\\input.mp4", sexo);
-
-                    var video = VdcrptR.Video.Load($"{Environment.CurrentDirectory}\\temp\\input.mp4");
-
-                    video.Transform(VdcrptR.Effects.Repeat(Preset.DefaultPresets[(int)preset].Iterations, Preset.DefaultPresets[(int)preset].BurstSize, Preset.DefaultPresets[(int)preset].MinBurstLength, Preset.DefaultPresets[(int)preset].UseLengthRange ? Preset.DefaultPresets[(int)preset].MaxBurstLength : Preset.DefaultPresets[(int)preset].MinBurstLength));
-
-                    video.Save($"{Environment.CurrentDirectory}\\temp\\output.mp4");
-
-                    await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Here is your datamoshed video!").AddFile($"output.mp4", new MemoryStream(File.ReadAllBytes($"{Environment.CurrentDirectory}\\temp\\output.mp4"))));
-                }
-                else
-                {
-                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("The file you provided is not a video or gif").AsEphemeral());
-                }
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("File can't be higher than 10 MB").AsEphemeral());
+                return;
             }
-            catch (Exception ex)
+            if (attachment.MediaType.Contains("video"))
             {
-                Console.WriteLine(ex.ToString());
+                await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder());
+
+                HttpResponseMessage a = await client.GetAsync(attachment.Url);
+
+                byte[] sexo = await a.Content.ReadAsByteArrayAsync();
+
+                string inName = Guid.NewGuid().ToString();
+                string outName = Guid.NewGuid().ToString();
+
+                File.WriteAllBytes($"{Environment.CurrentDirectory}\\temp\\{inName}.mp4", sexo);
+
+                try
+                {
+                    if (preset == 7) 
+                    {
+                        var video = VdcrptR.Video.Load($"{Environment.CurrentDirectory}\\temp\\{inName}.mp4");
+
+                        video.Transform(VdcrptR.Effects.Death(10));
+
+                        video.Transform(VdcrptR.Effects.Repeat(Preset.DefaultPresets[0].Iterations, Preset.DefaultPresets[0].BurstSize, Preset.DefaultPresets[0].MinBurstLength, Preset.DefaultPresets[0].UseLengthRange ? Preset.DefaultPresets[0].MaxBurstLength : Preset.DefaultPresets[0].MinBurstLength));
+
+                        video.Transform(VdcrptR.Effects.Repeat(Preset.DefaultPresets[5].Iterations, Preset.DefaultPresets[5].BurstSize, Preset.DefaultPresets[5].MinBurstLength, Preset.DefaultPresets[5].UseLengthRange ? Preset.DefaultPresets[5].MaxBurstLength : Preset.DefaultPresets[5].MinBurstLength));
+
+                        video.Transform(VdcrptR.Effects.Repeat(Preset.DefaultPresets[4].Iterations, Preset.DefaultPresets[4].BurstSize, Preset.DefaultPresets[4].MinBurstLength, Preset.DefaultPresets[4].UseLengthRange ? Preset.DefaultPresets[4].MaxBurstLength : Preset.DefaultPresets[4].MinBurstLength));
+
+                        video.Save($"{Environment.CurrentDirectory}\\temp\\{outName}.mp4");
+                    }
+                    else if (preset >= 8)
+                    {
+                        var video = VdcrptR.Video.Load($"{Environment.CurrentDirectory}\\temp\\{inName}.mp4");
+
+                        video.Transform(VdcrptR.Effects.Mosh((int)preset - 6));
+
+                        video.Save($"{Environment.CurrentDirectory}\\temp\\{outName}.mp4");
+                    }
+                    else
+                    {
+                        var video = VdcrptR.Video.Load($"{Environment.CurrentDirectory}\\temp\\{inName}.mp4");
+
+                        video.Transform(VdcrptR.Effects.Repeat(Preset.DefaultPresets[(int)preset].Iterations, Preset.DefaultPresets[(int)preset].BurstSize, Preset.DefaultPresets[(int)preset].MinBurstLength, Preset.DefaultPresets[(int)preset].UseLengthRange ? Preset.DefaultPresets[(int)preset].MaxBurstLength : Preset.DefaultPresets[(int)preset].MinBurstLength));
+
+                        video.Save($"{Environment.CurrentDirectory}\\temp\\{outName}.mp4");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Here is your datamoshed video!").AddFile($"{attachment.FileName}.mp4", new MemoryStream(File.ReadAllBytes($"{Environment.CurrentDirectory}\\temp\\{outName}.mp4"))));
+
+                File.Delete($"{Environment.CurrentDirectory}\\temp\\{inName}.mp4");
+                File.Delete($"{Environment.CurrentDirectory}\\temp\\{outName}.mp4");
+            }
+            else
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("The file you provided is not a video or gif").AsEphemeral());
             }
         }
     }
