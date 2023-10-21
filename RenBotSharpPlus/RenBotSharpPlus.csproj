@@ -5,9 +5,15 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>favicon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="favicon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DecimalMath.DecimalEx" Version="1.0.2" />
     <PackageReference Include="DSharpPlus" Version="4.4.2" />
     <PackageReference Include="DSharpPlus.Lavalink" Version="4.4.2" />
     <PackageReference Include="DSharpPlus.SlashCommands" Version="4.4.2" />

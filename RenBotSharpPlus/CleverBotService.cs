@@ -71,6 +71,7 @@ namespace RenBotSharp
             {
                 ret += hashBytes[i].ToString("x2");
             }
+
             return ret;
         }
 

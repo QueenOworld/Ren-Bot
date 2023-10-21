@@ -17,7 +17,6 @@ public class Preset
     public int MinBurstLength { get; init; }
     public int MaxBurstLength { get; init; }
 
-    // TODO: User-defined presets, this will become data
     public static List<Preset> DefaultPresets => new()
     {
         new Preset { Name = "Melting Chaos", BurstSize = 3000, MinBurstLength = 8, Iterations = 400 },

@@ -50,7 +50,7 @@ namespace RenBotSharp
             };
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(embed));
         }
-        [SlashCommand("ship", "Ship 2 people or things")]
+        [SlashCommand("ship", "Ship 2 people or things :3")]
         private async Task Ship(InteractionContext ctx, [Option("thing1", "thing to ship")] string thing1, [Option("thing2", "other thing to ship")] string thing2)
         {
             int percentage = Math.Min(Math.Abs(HashCode.Combine(thing1, thing2) % 101), 100);

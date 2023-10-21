@@ -22,7 +22,7 @@ namespace RenBotSharp
         HttpClient client = new HttpClient();
         CleverBot WisdomBot = new CleverBot();
 
-        [SlashCommand("rts", "Talk through Ren Bot, or be annoying")]
+        [SlashCommand("rts", "Talk through Ren Bot, or be annoying :3")]
         private async Task RTS(InteractionContext ctx, [Option("text", "what to say")] string text)
         {
             if (!ExternalRTS)

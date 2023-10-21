@@ -226,7 +226,8 @@ namespace RenBotSharp
             "Shoutout to Tomboys",
             "Shoutout to Women",
             "Shoutout to Men",
-            "Meow mrrp mew :3"
+            "Meow mrrp mew :3",
+            ":3 :3 :3 :3 :3 :3"
         };
     }
 }

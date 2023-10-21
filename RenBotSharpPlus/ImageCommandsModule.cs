@@ -364,7 +364,7 @@ namespace RenBotSharp
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("The file you provided is not an image").AsEphemeral());
             }
         }
-        [SlashCommand("nsfw", "Blurs an image (no porn sorry)")]
+        [SlashCommand("nsfw", "Blurs an image (no porn sorry :3)")]
         private async Task NSFW(InteractionContext ctx, [Option("image", "Image to blur")] DiscordAttachment attachment)
         {
             if (attachment.MediaType.Contains("image") && !attachment.MediaType.Contains("gif"))

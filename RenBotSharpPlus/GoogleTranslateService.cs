@@ -13,7 +13,9 @@ namespace RenBotSharp
         public GoogleTranslateService()
         {
             client = new HttpClient();
+
             client.DefaultRequestHeaders.Add("User-Agent", "AndroidTranslate/5.3.0.RC02.130475354-53000263 5.1 phone TRANSLATE_OPM5_TEST_1");
+
             client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
         }
         public async Task<string> Translate(string text, string from = "auto", string to = "en")

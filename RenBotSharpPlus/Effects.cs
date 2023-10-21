@@ -17,6 +17,7 @@ namespace VdcrptR
                 using (var ostream = new MemoryStream())
                 {
                     bool iFrameYet = false;
+
                     while (true)
                     {
                         Frame frame = Frame.ReadFromStream(istream);

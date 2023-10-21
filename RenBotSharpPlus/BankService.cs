@@ -25,6 +25,7 @@ namespace RenBotSharp
         public static bool SuccessfulSteal(decimal balance)
         {
             decimal chance = DecimalEx.Log2(balance) * (balance / 100000);
+
             if (chance > 90)
             {
                 chance = 90;

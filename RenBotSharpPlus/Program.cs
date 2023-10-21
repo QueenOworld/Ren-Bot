@@ -24,7 +24,7 @@ namespace RenBotSharp
         public static CleverBot clever = new CleverBot();
         static async Task Main(string[] args)
         {
-            Console.Title = "Ren Bot :>";
+            Console.Title = "Ren Bot :3";
 
             foreach (string i in File.ReadLines($"{Environment.CurrentDirectory}\\Talky.Ren"))
             {

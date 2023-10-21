@@ -133,7 +133,7 @@ namespace RenBotSharp
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(responseEmbed));
         }
-        [SlashCommand("steal", "Lets you steal ℝ from someone. Less effective against poorer people.")]
+        [SlashCommand("steal", "Lets you steal ℝ from someone. Less effective against poorer people. :3")]
         private async Task Steal(InteractionContext ctx, [Option("user", "Who to steal from")] DiscordUser user)
         {
             if (!Directory.Exists($"{Environment.CurrentDirectory}\\Bank\\{ctx.User.Id}"))

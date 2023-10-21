@@ -30,7 +30,7 @@ namespace RenBotSharp
 
             if (text.Length > 200)
             {
-                throw new Exception($"text length ({text.Length}) should be less than 200 characters.");
+                throw new Exception($"text length ({text.Length}) should be less than 200 characters :3");
             }
 
             var query = $"ie=UTF-8&q={Uri.EscapeDataString(text)}&tl={Uri.EscapeDataString(options.Lang)}&total=1&idx=0&textlen={text.Length}&client=tw-ob&prev=input&ttsspeed={(options.Slow ? 0.24 : 1)}";
