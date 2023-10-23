@@ -251,6 +251,11 @@ namespace RenBotSharp
             timer.Elapsed += async (s, e) => await UpdateStatusAsync();
             timer.Start();
 
+            foreach (var i in Discord.Guilds)
+            {
+                Console.WriteLine($"{i.Key} | {i.Value.Name}");
+            }
+
             await Task.Delay(-1);
         }
         public static async Task UpdateStatusAsync()

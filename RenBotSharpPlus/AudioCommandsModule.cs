@@ -12,6 +12,8 @@ using static System.Net.Mime.MediaTypeNames;
 using System.Collections;
 using System.Text.Json.Nodes;
 using Newtonsoft.Json;
+using YoutubeExplode.Playlists;
+using YoutubeExplode.Common;
 
 namespace RenBotSharp
 {
@@ -109,6 +111,61 @@ namespace RenBotSharp
             await conn.PlayAsync(track);
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Now playing {track.Uri}!"));
+        }
+        [SlashCommand("playlist", "play a youtube playlist")]
+        private async Task Playlist(InteractionContext ctx, [Option("playlist", "playlist url to play")] string url)
+        {
+            ExternalJoin = true;
+            await Join(ctx);
+            ExternalJoin = false;
+
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values.First();
+            var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+
+            if (conn == null)
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("The Lavalink connection is not established"));
+                return;
+            }
+
+            await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder());
+
+            YoutubeExplode.YoutubeClient client = new YoutubeExplode.YoutubeClient();
+
+            var playlist = client.Playlists.GetVideosAsync(url);
+
+            List<string> urls = new List<string>();
+
+            await foreach (var gock in playlist)
+            {
+                urls.Add(gock.Url);
+            }
+
+            foreach (var video in urls)
+            {
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Now playing {video}"));
+                await Play(ctx, video);
+            }
+        }
+        [SlashCommand("seek", "seek through a video")]
+        private async Task Seek(InteractionContext ctx, [Option("seconds", "how many seconds to seek")] long seconds)
+        {
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values.First();
+            var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+
+            if (conn == null)
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("The Lavalink connection is not established"));
+                return;
+            }
+
+            TimeSpan timeSpan = TimeSpan.FromSeconds(seconds);
+
+            await conn.SeekAsync(timeSpan);
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Seeked {seconds} seconds"));
         }
         [SlashCommand("playrandom", "Plays a random youtube video")]
         private async Task PlayRandom(InteractionContext ctx)
