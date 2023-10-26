@@ -48,13 +48,13 @@ namespace RenBotSharp
 
             var endpoint = new ConnectionEndpoint
             {
-                Hostname = "127.0.0.1", // From your server configuration.
-                Port = 2333 // From your server configuration
+                Hostname = "127.0.0.1",
+                Port = 2333
             };
 
             var lavalinkConfig = new LavalinkConfiguration
             {
-                Password = "youshallnotpass", // From your server configuration.
+                Password = "youshallnotpass",
                 RestEndpoint = endpoint,
                 SocketEndpoint = endpoint
             };
