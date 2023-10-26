@@ -25,9 +25,9 @@ I started this project in node.js and hated it, switched to C# a few months ago 
 ![Corruptor](.assets/corrupt.png)
 
 # Other projects used
-[vdcrpt](https://github.com/branchpanic/vdcrpt)
-- For datamoshing
-[Lavalink](https://github.com/lavalink-devs/Lavalink)
-- For audio commands
-SEAmonster
-- For content awareness filter, couldn't find the original source
+- [vdcrpt](https://github.com/branchpanic/vdcrpt)
+ - For datamoshing
+- [Lavalink](https://github.com/lavalink-devs/Lavalink)
+ - For audio commands
+- SEAmonster
+ - For content awareness filter, couldn't find the original source
