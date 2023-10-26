@@ -302,7 +302,7 @@ namespace RenBotSharp
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(result.ToString()));
         }
-        [SlashCommand("sex", "hehehe sex hehehehehehe funny")]
+        [SlashCommand("sex", "hehehe sex hehehehehehe funny :333")]
         private async Task Sex(InteractionContext ctx, [Option("user", "User to sex")] DiscordUser user)
         {
             if (user.Id == ctx.User.Id)
