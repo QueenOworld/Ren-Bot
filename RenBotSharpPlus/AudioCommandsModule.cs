@@ -85,6 +85,8 @@ namespace RenBotSharp
                 return;
             }
 
+            await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder());
+
             var loadResult = await node.Rest.GetTracksAsync(query);
 
             //If something went wrong on Lavalink's end                          
@@ -101,7 +103,7 @@ namespace RenBotSharp
                     //or it just couldn't find anything.
                     || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
                 {
-                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Track search failed for {query}."));
+                    await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Track search failed for {query}."));
                     return;
                 }
             }
@@ -110,7 +112,7 @@ namespace RenBotSharp
 
             await conn.PlayAsync(track);
 
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Now playing {track.Uri}!"));
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Now playing {track.Uri}!"));
         }
         [SlashCommand("playlist", "play a youtube playlist")]
         private async Task Playlist(InteractionContext ctx, [Option("playlist", "playlist url to play")] string url)
@@ -142,10 +144,35 @@ namespace RenBotSharp
                 urls.Add(gock.Url);
             }
 
-            foreach (var video in urls)
+            foreach (string video in urls)
             {
                 await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Now playing {video}"));
-                await Play(ctx, video);
+                var loadResult = await node.Rest.GetTracksAsync(video);
+
+                //If something went wrong on Lavalink's end                          
+                if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
+
+                    //or it just couldn't find anything.
+                    || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
+                {
+                    loadResult = await node.Rest.GetTracksAsync(new Uri(video));
+
+                    //If something went wrong on Lavalink's end                          
+                    if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
+
+                        //or it just couldn't find anything.
+                        || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
+                    {
+                        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Track search failed for {video}."));
+                        return;
+                    }
+                }
+
+                var track = loadResult.Tracks.First();
+
+                await conn.PlayAsync(track);
+
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Now playing {track.Uri}!"));
             }
         }
         [SlashCommand("seek", "seek through a video")]
