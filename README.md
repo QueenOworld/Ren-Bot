@@ -22,7 +22,7 @@ I started this project in node.js and hated it, switched to C# a few months ago 
 ![Talking to him](.assets/talky.png)
 ![Datamoshing](.assets/datamosh.png)
 ![Quote generator](.assets/quotes.png)
-![Corruptor](.assets/quotes.png)
+![Corruptor](.assets/corrupt.png)
 
 # Other projects used
 [vdcrpt](https://github.com/branchpanic/vdcrpt)
