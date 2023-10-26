@@ -19,3 +19,15 @@ I started this project in node.js and hated it, switched to C# a few months ago 
 - Much much more
 
 # Screenshots
+![Talking to him](.assets/talky.png)
+![Datamoshing](.assets/datamosh.png)
+![Quote generator](.assets/quotes.png)
+![Corruptor](.assets/quotes.png)
+
+# Other projects used
+[vdcrpt](https://github.com/branchpanic/vdcrpt)
+- For datamoshing
+[Lavalink](https://github.com/lavalink-devs/Lavalink)
+- For audio commands
+SEAmonster
+- For content awareness filter, couldn't find the original source
