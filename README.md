@@ -42,6 +42,6 @@ Run `dotnet build` in `Ren-Bot/RenBotSharpPlus`.
 
 ### Windows
 #### CLI
-Same as Linux steps.
+Same as Linux steps although you might need to perform environment variable shenanigans.
 #### Visual Studio
 Open the solution (`RenBotSharpPlus.sln`) and press build.
