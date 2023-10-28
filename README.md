@@ -6,7 +6,7 @@ He is not made for other servers outside of my friends' but I may make the serve
 I started this project in node.js and hated it, switched to C# a few months ago and rewrote 2 years worth of work in a few weeks.
 
 # Features
-- Way to many inside jokes
+- Way too many inside jokes
 - New status every minute
 - Audio commands with lavalink
 - Lots of image manipulation commands (Content awareness filter is the best)

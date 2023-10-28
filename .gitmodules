@@ -1,0 +1,9 @@
+[submodule "external/vdcrpt"]
+	path = external/vdcrpt
+	url = https://github.com/branchpanic/vdcrpt.git
+[submodule "external/Lavalink"]
+	path = external/Lavalink
+	url = https://github.com/lavalink-devs/Lavalink.git
+[submodule "external/StutterMosher"]
+	path = external/StutterMosher
+	url = https://github.com/IsaMorphic/StutterMosher.git
