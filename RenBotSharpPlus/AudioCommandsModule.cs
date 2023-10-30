@@ -83,6 +83,7 @@ namespace RenBotSharp
 
             if (!ExternalRTS)
             {
+                Console.WriteLine($"{ctx.User.Username} sent RTS: {text}");
                 await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Sent RTS: {text}"));
             }
         }
