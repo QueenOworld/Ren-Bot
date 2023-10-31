@@ -258,55 +258,62 @@ namespace RenBotSharp
 
             Discord.MessageReactionAdded += async (s, e) =>
             {
-                if (e.Guild.Id == 1064410879124320286)
+                try
                 {
-                    if (e.Emoji.GetDiscordName() == ":poop:")
+                    if (e.Guild.Id == 1064410879124320286)
                     {
-                        Uri uriResult;
-                        
-                        if (Uri.TryCreate(e.Message.Content, UriKind.Absolute, out uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
+                        if (e.Emoji.Id == 1165671822470168607 && e.Message.Reactions.Where(x => x.Emoji.Id == 1165671822470168607).Select(x => x).First().Count <= 1)
                         {
-                            DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
-                            {
-                                Title = e.Message.Author.Username,
-                                Description = e.Message.Content,
-                                ImageUrl = (e.Message.Attachments.Count > 0) ? e.Message.Attachments[0].Url : e.Message.Content,
-                                Footer = new DiscordEmbedBuilder.EmbedFooter() { IconUrl = e.Message.Author.AvatarUrl, Text = $"Sent at {e.Message.Timestamp}" }
-                            };
+                            Uri uriResult;
 
-                            if (e.Message.Attachments.Count > 0)
+                            if (Uri.TryCreate(e.Message.Content, UriKind.Absolute, out uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
                             {
-                                foreach (var attachment in e.Message.Attachments)
+                                DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
                                 {
-                                    embed.AddField(attachment.FileName, attachment.Url, true);
-                                }
-                            }
+                                    Title = e.Message.Author.Username,
+                                    Description = e.Message.Content,
+                                    ImageUrl = (e.Message.Attachments.Count > 0) ? e.Message.Attachments[0].Url : e.Message.Content,
+                                    Footer = new DiscordEmbedBuilder.EmbedFooter() { IconUrl = e.Message.Author.AvatarUrl, Text = $"Sent at {e.Message.Timestamp}" }
+                                };
 
-                            await s.SendMessageAsync(await Discord.GetChannelAsync(1166583996629667850), embed);
-                            return;
-                        }
-                        else
-                        {
-                            DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
-                            {
-                                Title = e.Message.Author.Username,
-                                Description = e.Message.Content,
-                                ImageUrl = (e.Message.Attachments.Count > 0) ? e.Message.Attachments[0].Url : string.Empty,
-                                Footer = new DiscordEmbedBuilder.EmbedFooter() { IconUrl = e.Message.Author.AvatarUrl, Text = $"Sent at {e.Message.Timestamp}" }
-                            };
-
-                            if (e.Message.Attachments.Count > 0)
-                            {
-                                foreach (var attachment in e.Message.Attachments)
+                                if (e.Message.Attachments.Count > 0)
                                 {
-                                    embed.AddField(attachment.FileName, attachment.Url, true);
+                                    foreach (var attachment in e.Message.Attachments)
+                                    {
+                                        embed.AddField(attachment.FileName, attachment.Url, true);
+                                    }
                                 }
-                            }
 
-                            await s.SendMessageAsync(await Discord.GetChannelAsync(1166583996629667850), embed);
-                            return;
+                                await s.SendMessageAsync(await Discord.GetChannelAsync(1166583996629667850), embed);
+                                return;
+                            }
+                            else
+                            {
+                                DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
+                                {
+                                    Title = e.Message.Author.Username,
+                                    Description = e.Message.Content,
+                                    ImageUrl = (e.Message.Attachments.Count > 0) ? e.Message.Attachments[0].Url : string.Empty,
+                                    Footer = new DiscordEmbedBuilder.EmbedFooter() { IconUrl = e.Message.Author.AvatarUrl, Text = $"Sent at {e.Message.Timestamp}" }
+                                };
+
+                                if (e.Message.Attachments.Count > 0)
+                                {
+                                    foreach (var attachment in e.Message.Attachments)
+                                    {
+                                        embed.AddField(attachment.FileName, attachment.Url, true);
+                                    }
+                                }
+
+                                await s.SendMessageAsync(await Discord.GetChannelAsync(1166583996629667850), embed);
+                                return;
+                            }
                         }
                     }
+                }
+                catch
+                {
+                    Console.WriteLine("Nuh Uh (Message not in cache [Fuck you])");
                 }
             };
 
