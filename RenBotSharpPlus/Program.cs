@@ -45,7 +45,7 @@ namespace RenBotSharp
         {
             Console.Title = "Ren Bot :3";
 
-            foreach (string i in File.ReadLines($"{Environment.CurrentDirectory}\\Talky.Ren"))
+            foreach (string i in File.ReadLines($"{Environment.CurrentDirectory}/Talky.Ren"))
             {
                 string[] pair = i.Split(' ');
                 Settings.TalkyServers[ulong.Parse(pair[0])] = bool.Parse(pair[1]);
@@ -82,10 +82,14 @@ namespace RenBotSharp
             var slash = Discord.UseSlashCommands();
 
 #if DEBUG
-            slash.RegisterCommands<BasicCommandsModule>(864223405774602260);
-            slash.RegisterCommands<AudioCommandsModule>(864223405774602260);
-            slash.RegisterCommands<ImageCommandsModule>(864223405774602260);
-            slash.RegisterCommands<BankCommandsModule>(864223405774602260);
+            ulong? serverId = config["TestServer"] != null
+                ? (ulong?)Convert.ToInt64(config["TestServer"])
+                : 864223405774602260;
+
+            slash.RegisterCommands<BasicCommandsModule>(serverId);
+            slash.RegisterCommands<AudioCommandsModule>(serverId);
+            slash.RegisterCommands<ImageCommandsModule>(serverId);
+            slash.RegisterCommands<BankCommandsModule>(serverId);
 #else
             slash.RegisterCommands<BasicCommandsModule>();
             slash.RegisterCommands<AudioCommandsModule>();
@@ -237,20 +241,20 @@ namespace RenBotSharp
                         Footer = new DiscordEmbedBuilder.EmbedFooter() { IconUrl = e.User.AvatarUrl }
                     };
 
-                    Directory.CreateDirectory($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}");
+                    Directory.CreateDirectory($"{Environment.CurrentDirectory}/Bank/{e.User.Id}");
 
-                    File.WriteAllText($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}\\Money.Ren", "0.00");
+                    File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{e.User.Id}/Money.Ren", "0.00");
 
-                    File.WriteAllText($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}\\Safe.Ren", "0.00");
+                    File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{e.User.Id}/Safe.Ren", "0.00");
 
-                    File.WriteAllText($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}\\StealCooldown.Ren", "0");
+                    File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{e.User.Id}/StealCooldown.Ren", "0");
 
-                    File.WriteAllText($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}\\SafeCooldown.Ren", "0");
+                    File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{e.User.Id}/SafeCooldown.Ren", "0");
 
                     DateTime currentTime = DateTime.UtcNow;
                     long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
 
-                    File.WriteAllText($"{Environment.CurrentDirectory}\\Bank\\{e.User.Id}\\Stash.Ren", unixTime.ToString());
+                    File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{e.User.Id}/Stash.Ren", unixTime.ToString());
 
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder().AddEmbed(embed));
                 }
@@ -322,7 +326,7 @@ namespace RenBotSharp
 
             DateTime currentTime = DateTime.UtcNow;
 
-            File.WriteAllText($"{Environment.CurrentDirectory}\\Startup.Ren", ((DateTimeOffset)currentTime).ToUnixTimeSeconds().ToString());
+            File.WriteAllText($"{Environment.CurrentDirectory}/Startup.Ren", ((DateTimeOffset)currentTime).ToUnixTimeSeconds().ToString());
 
             await Task.Delay(1000);
 
@@ -352,7 +356,8 @@ namespace RenBotSharp
         }
         private static string RandomMemberName()
         {
-            return Discord.Guilds[817559120910614570].Members.ElementAt(RandomNumberGenerator.GetInt32(0, Discord.Guilds[817559120910614570].Members.Count)).Value.DisplayName;
+            var members = Discord.Guilds[817559120910614570].Members;
+            return members.ElementAt(RandomNumberGenerator.GetInt32(0, members.Count)).Value.DisplayName;
         }
     }
 }
