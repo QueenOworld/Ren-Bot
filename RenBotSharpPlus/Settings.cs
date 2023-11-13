@@ -31,7 +31,7 @@ namespace RenBotSharp
         public static HttpClient client = new HttpClient();
         public static List<DiscordColor> Rainbow = new List<DiscordColor>() { DiscordColor.Red, DiscordColor.Orange, DiscordColor.Yellow, DiscordColor.Green, DiscordColor.Blue, DiscordColor.Purple, DiscordColor.Magenta };
         public static string LastWord = string.Empty;
-        public static string CurrentLanguage = File.ReadAllText($"{Environment.CurrentDirectory}\\CurrentLanguage.Ren");
+        public static string CurrentLanguage = File.ReadAllText($"{Environment.CurrentDirectory}/CurrentLanguage.Ren");
         public static Dictionary<ulong, DiscordMessage?> LastDeletedMessage = new Dictionary<ulong, DiscordMessage?>();
         public static Dictionary<string, string> LanguageDictionary = new Dictionary<string, string>()
         {

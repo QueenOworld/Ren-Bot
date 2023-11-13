@@ -89,7 +89,7 @@ namespace RenBotSharp
             {
                 NewSettings.Add($"{server.Key} {server.Value}");
             }
-            System.IO.File.WriteAllText($"{Environment.CurrentDirectory}\\Talky.Ren", string.Join("\n", NewSettings));
+            System.IO.File.WriteAllText($"{Environment.CurrentDirectory}/Talky.Ren", string.Join("\n", NewSettings));
             if (talky)
             {
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("I can talk now!"));
@@ -338,7 +338,7 @@ namespace RenBotSharp
             DateTime currentTime = DateTime.UtcNow;
             long CurrentTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
 
-            long StartupTime = long.Parse(System.IO.File.ReadAllText($"{Environment.CurrentDirectory}\\Startup.Ren"));
+            long StartupTime = long.Parse(System.IO.File.ReadAllText($"{Environment.CurrentDirectory}/Startup.Ren"));
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"I've been running for **{CurrentTime - StartupTime}** seconds without crashing."));
         }

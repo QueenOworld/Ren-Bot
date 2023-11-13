@@ -476,13 +476,13 @@ namespace RenBotSharp
             if (Settings.LanguageDictionary.ContainsKey(language.ToLower()))
             {
                 Settings.CurrentLanguage = Settings.LanguageDictionary[language.ToLower()];
-                File.WriteAllText($"{Environment.CurrentDirectory}\\CurrentLanguage.Ren", Settings.LanguageDictionary[language.ToLower()]);
+                File.WriteAllText($"{Environment.CurrentDirectory}/CurrentLanguage.Ren", Settings.LanguageDictionary[language.ToLower()]);
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Set language to `{language} - {Settings.LanguageDictionary[language.ToLower()]}`"));
             }
             else if (Settings.LanguageDictionary.ContainsValue(language))
             {
                 Settings.CurrentLanguage = language;
-                File.WriteAllText($"{Environment.CurrentDirectory}\\CurrentLanguage.Ren", language);
+                File.WriteAllText($"{Environment.CurrentDirectory}/CurrentLanguage.Ren", language);
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Set language to `{Settings.LanguageDictionary.FirstOrDefault(x => x.Value == language).Key} - {language}`"));
             }
             else

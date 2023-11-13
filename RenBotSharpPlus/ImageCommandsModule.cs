@@ -601,13 +601,13 @@ namespace RenBotSharp
                 string inName = Guid.NewGuid().ToString();
                 string outName = Guid.NewGuid().ToString();
 
-                File.WriteAllBytes($"{Environment.CurrentDirectory}\\temp\\{inName}.mp4", sexo);
+                File.WriteAllBytes($"{Environment.CurrentDirectory}/temp/{inName}.mp4", sexo);
 
                 try
                 {
                     if (preset == 7) 
                     {
-                        var video = VdcrptR.Video.Load($"{Environment.CurrentDirectory}\\temp\\{inName}.mp4");
+                        var video = VdcrptR.Video.Load($"{Environment.CurrentDirectory}/temp/{inName}.mp4");
 
                         video.Transform(VdcrptR.Effects.Death(10));
 
@@ -617,23 +617,23 @@ namespace RenBotSharp
 
                         video.Transform(VdcrptR.Effects.Repeat(Preset.DefaultPresets[4].Iterations, Preset.DefaultPresets[4].BurstSize, Preset.DefaultPresets[4].MinBurstLength, Preset.DefaultPresets[4].UseLengthRange ? Preset.DefaultPresets[4].MaxBurstLength : Preset.DefaultPresets[4].MinBurstLength));
 
-                        video.Save($"{Environment.CurrentDirectory}\\temp\\{outName}.mp4");
+                        video.Save($"{Environment.CurrentDirectory}/temp/{outName}.mp4");
                     }
                     else if (preset >= 8)
                     {
-                        var video = VdcrptR.Video.Load($"{Environment.CurrentDirectory}\\temp\\{inName}.mp4");
+                        var video = VdcrptR.Video.Load($"{Environment.CurrentDirectory}/temp/{inName}.mp4");
 
                         video.Transform(VdcrptR.Effects.Mosh((int)preset - 6));
 
-                        video.Save($"{Environment.CurrentDirectory}\\temp\\{outName}.mp4");
+                        video.Save($"{Environment.CurrentDirectory}/temp/{outName}.mp4");
                     }
                     else
                     {
-                        var video = VdcrptR.Video.Load($"{Environment.CurrentDirectory}\\temp\\{inName}.mp4");
+                        var video = VdcrptR.Video.Load($"{Environment.CurrentDirectory}/temp/{inName}.mp4");
 
                         video.Transform(VdcrptR.Effects.Repeat(Preset.DefaultPresets[(int)preset].Iterations, Preset.DefaultPresets[(int)preset].BurstSize, Preset.DefaultPresets[(int)preset].MinBurstLength, Preset.DefaultPresets[(int)preset].UseLengthRange ? Preset.DefaultPresets[(int)preset].MaxBurstLength : Preset.DefaultPresets[(int)preset].MinBurstLength));
 
-                        video.Save($"{Environment.CurrentDirectory}\\temp\\{outName}.mp4");
+                        video.Save($"{Environment.CurrentDirectory}/temp/{outName}.mp4");
                     }
                 }
                 catch (Exception ex)
@@ -641,10 +641,10 @@ namespace RenBotSharp
                     Console.WriteLine(ex.ToString());
                 }
 
-                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Here is your datamoshed video!").AddFile($"{attachment.FileName}.mp4", new MemoryStream(File.ReadAllBytes($"{Environment.CurrentDirectory}\\temp\\{outName}.mp4"))));
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Here is your datamoshed video!").AddFile($"{attachment.FileName}.mp4", new MemoryStream(File.ReadAllBytes($"{Environment.CurrentDirectory}/temp/{outName}.mp4"))));
 
-                File.Delete($"{Environment.CurrentDirectory}\\temp\\{inName}.mp4");
-                File.Delete($"{Environment.CurrentDirectory}\\temp\\{outName}.mp4");
+                File.Delete($"{Environment.CurrentDirectory}/temp/{inName}.mp4");
+                File.Delete($"{Environment.CurrentDirectory}/temp/{outName}.mp4");
             }
             else
             {
