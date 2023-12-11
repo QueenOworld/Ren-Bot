@@ -1,6 +1,6 @@
 ﻿/*
 Ren Bot is a discord bot with some silly features included.
-Copyright (C) 2023 - kingoworld
+Copyright (C) 2023 - queenoworld
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
@@ -133,12 +133,24 @@ namespace RenBotSharp
 
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Now playing {track.Uri}!"));
         }
+        // doesn't work ; pain
         [SlashCommand("playlist", "play a youtube playlist")]
         private async Task Playlist(InteractionContext ctx, [Option("playlist", "playlist url to play")] string url)
         {
             ExternalJoin = true;
             await Join(ctx);
             ExternalJoin = false;
+
+            YoutubeExplode.YoutubeClient client = new YoutubeExplode.YoutubeClient();
+
+            var playlist = client.Playlists.GetVideosAsync(url);
+
+            List<string> urls = new List<string>();
+
+            await foreach (var gock in playlist)
+            {
+                urls.Add(gock.Url);
+            }
 
             var lava = ctx.Client.GetLavalink();
             var node = lava.ConnectedNodes.Values.First();
@@ -152,29 +164,20 @@ namespace RenBotSharp
 
             await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder());
 
-            YoutubeExplode.YoutubeClient client = new YoutubeExplode.YoutubeClient();
+            ManualResetEvent oSignalEvent = new ManualResetEvent(false);
 
-            var playlist = client.Playlists.GetVideosAsync(url);
-
-            List<string> urls = new List<string>();
-
-            await foreach (var gock in playlist)
+            conn.PlaybackFinished += async (s, e) => 
             {
-                urls.Add(gock.Url);
-            }
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Playing next song in playlist..."));
+                oSignalEvent.Set();
+            };
 
             foreach (string video in urls)
             {
-                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Now playing {video}"));
-                var loadResult = await node.Rest.GetTracksAsync(video);
-
-                //If something went wrong on Lavalink's end                          
-                if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
-
-                    //or it just couldn't find anything.
-                    || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
+                Thread help = new Thread(async () => 
                 {
-                    loadResult = await node.Rest.GetTracksAsync(new Uri(video));
+                    await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Now playing {video}"));
+                    var loadResult = await node.Rest.GetTracksAsync(video);
 
                     //If something went wrong on Lavalink's end                          
                     if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
@@ -182,16 +185,30 @@ namespace RenBotSharp
                         //or it just couldn't find anything.
                         || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
                     {
-                        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Track search failed for {video}."));
-                        return;
+                        loadResult = await node.Rest.GetTracksAsync(new Uri(video));
+
+                        //If something went wrong on Lavalink's end                          
+                        if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
+
+                            //or it just couldn't find anything.
+                            || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
+                        {
+                            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Track search failed for {video}."));
+                            return;
+                        }
                     }
-                }
 
-                var track = loadResult.Tracks.First();
+                    var track = loadResult.Tracks.First();
 
-                await conn.PlayAsync(track);
+                    await conn.PlayAsync(track);
 
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Now playing {track.Uri}!"));
+                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Now playing {track.Uri}!"));
+                });
+
+                help.Start();
+
+                oSignalEvent.WaitOne();
+                oSignalEvent.Reset();
             }
         }
         [SlashCommand("seek", "seek through a video")]

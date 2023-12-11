@@ -1,6 +1,6 @@
 ﻿/*
 Ren Bot is a discord bot with some silly features included.
-Copyright (C) 2023 - kingoworld
+Copyright (C) 2023 - queenoworld
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
