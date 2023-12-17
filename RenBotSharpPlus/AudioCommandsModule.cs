@@ -507,8 +507,7 @@ namespace RenBotSharp
                 json["servers"][ctx.Guild.Id.ToString()]["current_language"] = LanguageDictionary[language.ToLower()];
                 
                 File.WriteAllText("config.json", json.ToString());
-
-                File.WriteAllText($"{Environment.CurrentDirectory}/CurrentLanguage.Ren", LanguageDictionary[language.ToLower()]);
+                
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Set language to `{language} - {LanguageDictionary[language.ToLower()]}`"));
             }
             else if (LanguageDictionary.ContainsValue(language))
@@ -517,7 +516,6 @@ namespace RenBotSharp
                 
                 File.WriteAllText("config.json", json.ToString());
 
-                File.WriteAllText($"{Environment.CurrentDirectory}/CurrentLanguage.Ren", language);
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Set language to `{LanguageDictionary.FirstOrDefault(x => x.Value == language).Key} - {language}`"));
             }
             else
