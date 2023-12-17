@@ -639,6 +639,14 @@ namespace RenBotSharp
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.ToString());
+                    
+
+                    System.IO.DirectoryInfo temp = new DirectoryInfo("./temp/");
+
+                    foreach (FileInfo file in temp.GetFiles())
+                    {
+                        file.Delete(); 
+                    }
                 }
 
                 await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Here is your datamoshed video!").AddFile($"{attachment.FileName}.mp4", new MemoryStream(File.ReadAllBytes($"{Environment.CurrentDirectory}/temp/{outName}.mp4"))));

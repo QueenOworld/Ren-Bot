@@ -32,6 +32,7 @@ using System.Text.Json.Nodes;
 using Newtonsoft.Json;
 using YoutubeExplode.Playlists;
 using YoutubeExplode.Common;
+using Newtonsoft.Json.Linq;
 
 namespace RenBotSharp
 {
@@ -61,7 +62,12 @@ namespace RenBotSharp
             }
 
             GoogleTextToSpeech.Option option = new GoogleTextToSpeech.Option();
-            option.Lang = Settings.CurrentLanguage;
+
+            JObject json = JObject.Parse(File.ReadAllText("config.json"));
+
+            string LanguageFromJson = json["servers"][ctx.Guild.Id.ToString()]["current_language"].ToString();
+
+            option.Lang = LanguageFromJson;
 
             string audioUrl = GoogleTextToSpeech.GetAudioUrl(text, option);
 
@@ -484,27 +490,39 @@ namespace RenBotSharp
         [SlashCommand("language", "Changes the RTS language, you can set it through its name or short name (ex: Spanish or es-ES)")]
         public async Task Language(InteractionContext ctx, [Option("language", "what to set the language to, leave empty to get current language")] string language = null)
         {
+            JObject json = JObject.Parse(File.ReadAllText("config.json"));
+
+            string LanguageFromJson = json["servers"][ctx.Guild.Id.ToString()]["current_language"].ToString();
+
+            Dictionary<string, string> LanguageDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("language_dictionary.json"));
+
             if (language == null)
             {
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Current language: `{Settings.LanguageDictionary.FirstOrDefault(x => x.Value == Settings.CurrentLanguage).Key} - {Settings.CurrentLanguage}`"));
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Current language: `{LanguageDictionary.FirstOrDefault(x => x.Value.ToString() == LanguageFromJson).Key} - {LanguageFromJson}`"));
                 return;
             }
 
-            if (Settings.LanguageDictionary.ContainsKey(language.ToLower()))
+            if (LanguageDictionary.ContainsKey(language.ToLower()))
             {
-                Settings.CurrentLanguage = Settings.LanguageDictionary[language.ToLower()];
-                File.WriteAllText($"{Environment.CurrentDirectory}/CurrentLanguage.Ren", Settings.LanguageDictionary[language.ToLower()]);
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Set language to `{language} - {Settings.LanguageDictionary[language.ToLower()]}`"));
+                json["servers"][ctx.Guild.Id.ToString()]["current_language"] = LanguageDictionary[language.ToLower()];
+                
+                File.WriteAllText("config.json", json.ToString());
+
+                File.WriteAllText($"{Environment.CurrentDirectory}/CurrentLanguage.Ren", LanguageDictionary[language.ToLower()]);
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Set language to `{language} - {LanguageDictionary[language.ToLower()]}`"));
             }
-            else if (Settings.LanguageDictionary.ContainsValue(language))
+            else if (LanguageDictionary.ContainsValue(language))
             {
-                Settings.CurrentLanguage = language;
+                json["servers"][ctx.Guild.Id.ToString()]["current_language"] = language;
+                
+                File.WriteAllText("config.json", json.ToString());
+
                 File.WriteAllText($"{Environment.CurrentDirectory}/CurrentLanguage.Ren", language);
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Set language to `{Settings.LanguageDictionary.FirstOrDefault(x => x.Value == language).Key} - {language}`"));
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Set language to `{LanguageDictionary.FirstOrDefault(x => x.Value == language).Key} - {language}`"));
             }
             else
             {
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"The language `{language}` does not exist\nLanguage list: <https://cloud.google.com/text-to-speech/docs/voices>"));
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"The language `{language}` does not exist\nLanguage list: <https://pastebin.com/ysiKnzpL>"));
             }
         }
     }

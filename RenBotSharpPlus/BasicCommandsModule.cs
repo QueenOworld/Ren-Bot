@@ -83,13 +83,12 @@ namespace RenBotSharp
         [SlashCommand("allowtalking", "Let ren bot speak")]
         private async Task AllowTalking(InteractionContext ctx, [Option("cantalk", "whether he can talk or not")] bool talky)
         {
-            Settings.TalkyServers[ctx.Guild.Id] = talky;
-            List<string> NewSettings = new List<string>();
-            foreach (var server in Settings.TalkyServers)
-            {
-                NewSettings.Add($"{server.Key} {server.Value}");
-            }
-            System.IO.File.WriteAllText($"{Environment.CurrentDirectory}/Talky.Ren", string.Join("\n", NewSettings));
+            JObject json = JObject.Parse(System.IO.File.ReadAllText("config.json"));
+
+            json["servers"][ctx.Guild.Id.ToString()]["talky"] = talky;
+
+            System.IO.File.WriteAllText("config.json", json.ToString());
+
             if (talky)
             {
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("I can talk now!"));
@@ -153,17 +152,23 @@ namespace RenBotSharp
         [SlashCommand("define", "Define a word, leave empty for a random word")]
         private async Task Define(InteractionContext ctx, [Option("word", "word to define, leave empty for random")] string word = "")
         {
-            DataSet words = JsonConvert.DeserializeObject<DataSet>(await Settings.client.GetStringAsync($"https://api.urbandictionary.com/v0/{((string.IsNullOrEmpty(word)) ? "random" : $"define?page=1&term={word}")}"));
+            HttpClient client = new HttpClient();
+
+            JObject wordJson = JObject.Parse(System.IO.File.ReadAllText("config.json"));
+
+            DataSet words = JsonConvert.DeserializeObject<DataSet>(await client.GetStringAsync($"https://api.urbandictionary.com/v0/{((string.IsNullOrEmpty(word)) ? "random" : $"define?page=1&term={word}")}"));
 
             DataTable dataTable = words.Tables["list"];
 
             DataRow result = dataTable.Rows[0];
 
-            Settings.LastWord = result["word"].ToString();
+            wordJson["word"] = result["word"].ToString();
+
+            System.IO.File.WriteAllText("config.json", wordJson.ToString());
 
             if (string.IsNullOrEmpty(word))
             {
-                words = JsonConvert.DeserializeObject<DataSet>(await Settings.client.GetStringAsync($"https://api.urbandictionary.com/v0/define?page=1&term={result["word"]}"));
+                words = JsonConvert.DeserializeObject<DataSet>(await client.GetStringAsync($"https://api.urbandictionary.com/v0/define?page=1&term={result["word"]}"));
 
                 dataTable = words.Tables["list"];
 
@@ -201,6 +206,8 @@ namespace RenBotSharp
             {
                 left, right
             }));
+
+            client.Dispose();
         }
         [SlashCommand("translate", "Google translate in Ren Bot (real)")]
         private async Task Translate(InteractionContext ctx, [Option("text", "text to translate")] string text, [Option("from", "language to translate from")] string from = "auto", [Option("to", "language to translate to")] string to = "en")
@@ -219,31 +226,25 @@ namespace RenBotSharp
         [SlashCommand("expose", "Shows the contents of the last deleted message")]
         private async Task Expose(InteractionContext ctx)
         {
-            if (Settings.LastDeletedMessage[ctx.Guild.Id] != null)
-            {
-                DiscordMessage message = Settings.LastDeletedMessage[ctx.Guild.Id];
-                DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
-                {
-                    Title = message.Author.Username,
-                    Description = message.Content,
-                    ImageUrl = (message.Attachments.Count > 0) ? message.Attachments[0].Url : string.Empty,
-                    Footer = new DiscordEmbedBuilder.EmbedFooter() { IconUrl = message.Author.AvatarUrl, Text = $"Sent at {message.Timestamp}" }
-                };
+            JObject json = JObject.Parse(System.IO.File.ReadAllText("config.json"));
 
-                if (message.Attachments.Count > 0)
+            DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
+            {
+                Title = json["servers"][ctx.Guild.Id.ToString()]["deleted_message"]["username"].ToString(),
+                Description = json["servers"][ctx.Guild.Id.ToString()]["deleted_message"]["content"].ToString(),
+                ImageUrl = (json["servers"][ctx.Guild.Id.ToString()]["deleted_message"]["urls"].ToObject<List<string>>().Count > 0) ? json["servers"][ctx.Guild.Id.ToString()]["deleted_message"]["urls"].ToObject<List<string>>()[0] : string.Empty,
+                Footer = new DiscordEmbedBuilder.EmbedFooter() { IconUrl = json["servers"][ctx.Guild.Id.ToString()]["deleted_message"]["avatar"].ToString(), Text = $"Sent at {json["servers"][ctx.Guild.Id.ToString()]["deleted_message"]["timestamp"].ToString()}" }
+            };
+
+            if (json["servers"][ctx.Guild.Id.ToString()]["deleted_message"]["urls"].ToObject<List<string>>().Count > 0)
+            {
+                for (int i = 0; i < json["servers"][ctx.Guild.Id.ToString()]["deleted_message"]["urls"].ToObject<List<string>>().Count; i++)
                 {
-                    foreach (var attachment in message.Attachments)
-                    {
-                        embed.AddField(attachment.FileName, attachment.Url, true);
-                    }
+                    embed.AddField(json["servers"][ctx.Guild.Id.ToString()]["deleted_message"]["filenames"].ToObject<List<string>>()[i], json["servers"][ctx.Guild.Id.ToString()]["deleted_message"]["urls"].ToObject<List<string>>()[i], true);
                 }
+            }
 
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(embed));
-            }
-            else
-            {
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("No messages have been deleted since I last activated"));
-            }
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(embed));
         }
         [SlashCommand("generatecolor", "Generates a random color, along with its hex code")]
         private async Task GenerateColor(InteractionContext ctx)
@@ -335,10 +336,12 @@ namespace RenBotSharp
         [SlashCommand("uptime", "Tells you how long Ren Bot has been running since last startup")]
         private async Task Uptime(InteractionContext ctx)
         {
+            JObject json = JObject.Parse(System.IO.File.ReadAllText("config.json"));
+
             DateTime currentTime = DateTime.UtcNow;
             long CurrentTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
 
-            long StartupTime = long.Parse(System.IO.File.ReadAllText($"{Environment.CurrentDirectory}/Startup.Ren"));
+            long StartupTime = long.Parse(json["startup"].ToString());
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"I've been running for **{CurrentTime - StartupTime}** seconds without crashing."));
         }

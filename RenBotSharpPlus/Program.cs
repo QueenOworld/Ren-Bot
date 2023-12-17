@@ -32,6 +32,7 @@ using System.Web;
 using System.Security.Cryptography;
 using System.Timers;
 using System.Net;
+using Newtonsoft.Json.Linq;
 
 namespace RenBotSharp
 {
@@ -43,21 +44,23 @@ namespace RenBotSharp
         public static CleverBot clever = new CleverBot();
         static async Task Main(string[] args)
         {
+            HttpClient client = new HttpClient();
+
             Console.Title = "Ren Bot :3";
 
-            foreach (string i in File.ReadLines($"{Environment.CurrentDirectory}/Talky.Ren"))
-            {
-                string[] pair = i.Split(' ');
-                Settings.TalkyServers[ulong.Parse(pair[0])] = bool.Parse(pair[1]);
+            if (!File.Exists("config.json")) {
+                File.Create("config.json");
+                File.WriteAllText("config.json", JObject.Parse("""{"startup": "0", "word": "", "servers": {}, }""").ToString());
+            }
+            else if (File.ReadAllText("config.json") == String.Empty) {
+                File.WriteAllText("config.json", JObject.Parse("""{"startup": "0", "word": "", "servers": {}, }""").ToString());
             }
 
-            config = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile(path: "config.json").Build();
+            JObject json = JObject.Parse(File.ReadAllText("config.json"));
 
             Discord = new DiscordClient(new DiscordConfiguration()
             {
-                Token = config["Token"],
+                Token = File.ReadAllText(".token"),
                 TokenType = TokenType.Bot,
                 Intents = DiscordIntents.All,
                 MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Debug,
@@ -82,8 +85,8 @@ namespace RenBotSharp
             var slash = Discord.UseSlashCommands();
 
 #if DEBUG
-            ulong? serverId = config["TestServer"] != null
-                ? (ulong?)Convert.ToInt64(config["TestServer"])
+            ulong? serverId = json["TestServer"] != null
+                ? (ulong?)Convert.ToInt64(json["TestServer"])
                 : 864223405774602260;
 
             slash.RegisterCommands<BasicCommandsModule>(serverId);
@@ -99,16 +102,37 @@ namespace RenBotSharp
 
             Discord.MessageDeleted += async (s, e) =>
             {
-                Settings.LastDeletedMessage[e.Guild.Id] = e.Message;
+                JObject message = JObject.Parse(File.ReadAllText("config.json"));
+                message["servers"][e.Guild.Id.ToString()]["deleted_message"]["username"] = e.Message.Author.Username;
+
+                message["servers"][e.Guild.Id.ToString()]["deleted_message"]["avatar"] = e.Message.Author.AvatarUrl;
+
+                message["servers"][e.Guild.Id.ToString()]["deleted_message"]["content"] = e.Message.Content;
+
+                JArray urls = (JArray)message["servers"][e.Guild.Id.ToString()]["deleted_message"]["urls"];
+                urls.Clear();
+                JArray filenames = (JArray)message["servers"][e.Guild.Id.ToString()]["deleted_message"]["filenames"];
+                filenames.Clear();
+
+                foreach (var attachment in e.Message.Attachments) {
+                    urls.Add(attachment.Url);
+                    filenames.Add(attachment.FileName);
+                }
+
+                message["servers"][e.Guild.Id.ToString()]["deleted_message"]["timestamp"] = e.Message.Timestamp.ToString();
+
+                File.WriteAllText("config.json", message.ToString());
             };
 
             Discord.MessageCreated += async (s, e) =>
             {
+                JObject json = JObject.Parse(File.ReadAllText("config.json"));
+
                 if (e.Message.Author.Id != 1088269352542949436)
                 {
-                    if (Settings.TalkyServers[e.Guild.Id])
+                    if ((bool)json["servers"][e.Guild.Id.ToString()]["talky"])
                     {
-                        if (e.Message.ChannelId == 1009900125818208276 || e.Message.ChannelId == 891136812091838514 || e.Message.ChannelId == 817559757249314816  || e.Message.ChannelId == 1133010507712974858 || e.Message.ChannelId == 798294820568956940 || e.Message.ChannelId == 1010386646987980830 || e.Message.ChannelId == 853768477750722602)
+                        if (json["servers"][e.Guild.Id.ToString()]["talky_whitelist"].ToList().Contains(e.Channel.Id.ToString()))
                         {
                             if (!e.Message.Author.IsBot)
                             {
@@ -129,13 +153,17 @@ namespace RenBotSharp
 
             Discord.ComponentInteractionCreated += async (s, e) =>
             {
+                List<DiscordColor> Rainbow = new List<DiscordColor>() { DiscordColor.Red, DiscordColor.Orange, DiscordColor.Yellow, DiscordColor.Green, DiscordColor.Blue, DiscordColor.Purple, DiscordColor.Magenta };
+
+                JObject wordJson = JObject.Parse(File.ReadAllText("config.json"));
+
                 if (e.Id == "left_arrow_define")
                 {
                     int currentpage = int.Parse(new Regex(@"\d+(?=\/)").Match(e.Message.Embeds.First().Footer.Text).Value);
 
                     currentpage--;
 
-                    DataSet words = JsonConvert.DeserializeObject<DataSet>(await Settings.client.GetStringAsync($"https://api.urbandictionary.com/v0/{((string.IsNullOrEmpty(Settings.LastWord)) ? "random" : $"define?page=1&term={Settings.LastWord}")}"));
+                    DataSet words = JsonConvert.DeserializeObject<DataSet>(await client.GetStringAsync($"https://api.urbandictionary.com/v0/{((string.IsNullOrEmpty(wordJson["word"].ToString())) ? "random" : $"define?page=1&term={wordJson["word"].ToString()}")}"));
 
                     DataTable dataTable = words.Tables["list"];
 
@@ -146,7 +174,7 @@ namespace RenBotSharp
                         Title = result["word"].ToString(),
                         Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = $"Page {currentpage}/{dataTable.Rows.Count}  •  {DateTime.Now.ToString("t")}" },
                         Url = result["permalink"].ToString(),
-                        Color = Settings.Rainbow[(currentpage - 1) % 7]
+                        Color = Rainbow[(currentpage - 1) % 7]
                     };
 
                     try
@@ -179,7 +207,7 @@ namespace RenBotSharp
 
                     currentpage++;
 
-                    DataSet words = JsonConvert.DeserializeObject<DataSet>(await Settings.client.GetStringAsync($"https://api.urbandictionary.com/v0/{((string.IsNullOrEmpty(Settings.LastWord)) ? "random" : $"define?page=1&term={Settings.LastWord}")}"));
+                    DataSet words = JsonConvert.DeserializeObject<DataSet>(await client.GetStringAsync($"https://api.urbandictionary.com/v0/{((string.IsNullOrEmpty(wordJson["word"].ToString())) ? "random" : $"define?page=1&term={wordJson["word"].ToString()}")}"));
 
                     DataTable dataTable = words.Tables["list"];
 
@@ -190,7 +218,7 @@ namespace RenBotSharp
                         Title = result["word"].ToString(),
                         Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = $"Page {currentpage}/{dataTable.Rows.Count}  •  {DateTime.Now.ToString("t")}" },
                         Url = result["permalink"].ToString(),
-                        Color = Settings.Rainbow[(currentpage - 1) % 7]
+                        Color = Rainbow[(currentpage - 1) % 7]
                     };
 
                     try
@@ -322,11 +350,11 @@ namespace RenBotSharp
             };
 
             await Discord.ConnectAsync();
-            await lavalink.ConnectAsync(lavalinkConfig); // Make sure this is after Discord.ConnectAsync().
+            await lavalink.ConnectAsync(lavalinkConfig);
 
             DateTime currentTime = DateTime.UtcNow;
 
-            File.WriteAllText($"{Environment.CurrentDirectory}/Startup.Ren", ((DateTimeOffset)currentTime).ToUnixTimeSeconds().ToString());
+            json["startup"] = ((DateTimeOffset)currentTime).ToUnixTimeSeconds().ToString();
 
             await Task.Delay(1000);
 
@@ -335,10 +363,16 @@ namespace RenBotSharp
             timer.Elapsed += async (s, e) => await UpdateStatusAsync();
             timer.Start();
 
-            foreach (var i in Discord.Guilds)
+            foreach (var guild in Discord.Guilds)
             {
-                Console.WriteLine($"{i.Key} | {i.Value.Name}");
+                Console.WriteLine($"{guild.Key} | {guild.Value.Name}");
+
+                if (json["servers"][guild.Key.ToString()] == null) {
+                    json["servers"][guild.Key.ToString()] = JObject.Parse("""{"talky": false,"talky_whitelist": [],"current_language": "en-AU", "deleted_message": {"username": "","avatar": "","content": "","urls": [], "filenames": [], "timestamp": ""}}""");
+                }
             }
+
+            File.WriteAllText("config.json", json.ToString());
 
             await Task.Delay(-1);
         }
@@ -350,13 +384,15 @@ namespace RenBotSharp
             if (type == 4) { type = 5; }
             activity.ActivityType = (ActivityType)type;
 
-            activity.Name = Settings.Statuses[RandomNumberGenerator.GetInt32(0, Settings.Statuses.Length)].Replace("${Mem}", RandomMemberName());
+            var json = JArray.Parse(File.ReadAllText("statuses.json")).ToList();
+
+            activity.Name = json[RandomNumberGenerator.GetInt32(0, json.Count())].ToString().Replace("${Mem}", RandomMemberName());
 
             await Discord.UpdateStatusAsync(activity);
         }
         private static string RandomMemberName()
         {
-            var members = Discord.Guilds[817559120910614570].Members;
+            var members = Discord.Guilds.ElementAt(RandomNumberGenerator.GetInt32(0, Discord.Guilds.Count())).Value.Members;
             return members.ElementAt(RandomNumberGenerator.GetInt32(0, members.Count)).Value.DisplayName;
         }
     }

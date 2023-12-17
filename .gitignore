@@ -365,8 +365,11 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# Bot Token
+# Config
 config.json
+
+# Token
+.token
 
 # nohup logs from Lavalink
 nohup.out
