@@ -35,7 +35,7 @@ I started this project in node.js and hated it, switched to C# a few months ago 
 ## Compiling
 Download .NET 7 for your system.<br>
 
-Recursively clone the repository (`git clone --recursive https://github.com/KingOworld/Ren-Bot.git`).<br>
+Recursively clone the repository (`git clone --recursive https://github.com/QueenOworld/Ren-Bot.git`).<br>
 
 ### Linux
 Run `dotnet build` in `Ren-Bot/RenBotSharpPlus`.
