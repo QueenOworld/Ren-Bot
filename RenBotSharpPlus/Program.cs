@@ -269,20 +269,13 @@ namespace RenBotSharp
                         Footer = new DiscordEmbedBuilder.EmbedFooter() { IconUrl = e.User.AvatarUrl }
                     };
 
-                    Directory.CreateDirectory($"{Environment.CurrentDirectory}/Bank/{e.User.Id}");
-
-                    File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{e.User.Id}/Money.Ren", "0.00");
-
-                    File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{e.User.Id}/Safe.Ren", "0.00");
-
-                    File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{e.User.Id}/StealCooldown.Ren", "0");
-
-                    File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{e.User.Id}/SafeCooldown.Ren", "0");
+                    JObject user = JObject.Parse(File.ReadAllText("config.json"));
 
                     DateTime currentTime = DateTime.UtcNow;
                     long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
+                    user["servers"][e.Guild.Id.ToString()]["bank"][e.User.Id.ToString()] = JObject.Parse("""{"money": "0.00", "safe": "0.00", "steal_cooldown": "0", "safe_cooldown": "0", "stash": "time"}""".Replace("time", $"{unixTime.ToString()}"));
 
-                    File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{e.User.Id}/Stash.Ren", unixTime.ToString());
+                    File.WriteAllText("config.json", user.ToString());
 
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder().AddEmbed(embed));
                 }
@@ -368,7 +361,7 @@ namespace RenBotSharp
                 Console.WriteLine($"{guild.Key} | {guild.Value.Name}");
 
                 if (json["servers"][guild.Key.ToString()] == null) {
-                    json["servers"][guild.Key.ToString()] = JObject.Parse("""{"talky": false,"talky_whitelist": [],"current_language": "en-AU", "deleted_message": {"username": "","avatar": "","content": "","urls": [], "filenames": [], "timestamp": ""}}""");
+                    json["servers"][guild.Key.ToString()] = JObject.Parse("""{"bank": {},"talky": false,"talky_whitelist": [],"current_language": "en-AU", "deleted_message": {"username": "","avatar": "","content": "","urls": [], "filenames": [], "timestamp": ""}}""");
                 }
             }
 

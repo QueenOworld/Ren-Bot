@@ -26,6 +26,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Security.Cryptography;
+using Newtonsoft.Json.Linq;
 
 namespace RenBotSharp
 {
@@ -34,6 +35,8 @@ namespace RenBotSharp
         [SlashCommand("balance", "Checks your balance")]
         private async Task Balance(InteractionContext ctx, [Option("user", "Who's balance to check (Default: User who ran the command)")] DiscordUser user = null)
         {
+            JObject json = JObject.Parse(File.ReadAllText("config.json"));
+
             if (user == null)
             {
                 user = ctx.User;
@@ -41,7 +44,7 @@ namespace RenBotSharp
 
             if (ctx.User.Id == user.Id)
             {
-                if (!Directory.Exists($"{Environment.CurrentDirectory}/Bank/{user.Id}"))
+                if (json["servers"][ctx.Guild.Id.ToString()]["bank"][user.Id.ToString()] == null)
                 {
                     DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
                     {
@@ -59,7 +62,7 @@ namespace RenBotSharp
             }
             else
             {
-                if (!Directory.Exists($"{Environment.CurrentDirectory}/Bank/{user.Id}"))
+                if (json["servers"][ctx.Guild.Id.ToString()]["bank"][user.Id.ToString()] == null)
                 {
                     DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
                     {
@@ -74,9 +77,9 @@ namespace RenBotSharp
                 }
             }
 
-            decimal balance = Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{user.Id}/Money.Ren"));
+            decimal balance = Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][user.Id.ToString()]["money"].ToString());
 
-            decimal safe = Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{user.Id}/Safe.Ren"));
+            decimal safe = Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][user.Id.ToString()]["safe"].ToString());
 
             DiscordEmbedBuilder responseEmbed = new DiscordEmbedBuilder()
             {
@@ -88,11 +91,11 @@ namespace RenBotSharp
             DateTime currentTime = DateTime.UtcNow;
             long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
 
-            decimal Stash = (unixTime - Convert.ToInt64(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{user.Id}/Stash.Ren"))) * (Decimal.Round(BankService.GetCurrentValue(), 2) + 1);
+            decimal Stash = (unixTime - Convert.ToInt64(json["servers"][ctx.Guild.Id.ToString()]["bank"][user.Id.ToString()]["stash"].ToString())) * (Decimal.Round(BankService.GetCurrentValue(), 2) + 1);
 
             responseEmbed.AddField("Balance", "ℝ" + Decimal.Round(balance, 2).ToString());
 
-            responseEmbed.AddField("In Stash", $"ℝ{Decimal.Round(Stash, 2).ToString()} ({Decimal.Round(unixTime - Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{user.Id}/Stash.Ren")), 2)}*{Decimal.Round(BankService.GetCurrentValue() + 1, 2)})");
+            responseEmbed.AddField("In Stash", $"ℝ{Decimal.Round(Stash, 2).ToString()} ({Decimal.Round(unixTime - Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][user.Id.ToString()]["stash"].ToString()), 2)}*{Decimal.Round(BankService.GetCurrentValue() + 1, 2)})");
 
             responseEmbed.AddField("In Safe", $"ℝ{Decimal.Round(safe, 2)}");
 
@@ -101,20 +104,24 @@ namespace RenBotSharp
         [SlashCommand("draw", "Draws unclaimed money accumulated money from your stash")]
         private async Task Draw(InteractionContext ctx)
         {
+            JObject json = JObject.Parse(File.ReadAllText("config.json"));
+
             DateTime currentTime = DateTime.UtcNow;
             long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
 
-            decimal Stash = (unixTime - Convert.ToInt64(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Stash.Ren"))) * (Decimal.Round(BankService.GetCurrentValue(), 2) + 1);
+            decimal Stash = (unixTime - Convert.ToInt64(json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["stash"].ToString())) * (Decimal.Round(BankService.GetCurrentValue(), 2) + 1);
 
-            File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Stash.Ren", unixTime.ToString());
+            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["stash"] = unixTime.ToString();
 
-            decimal balance = Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Money.Ren"));
+            decimal balance = Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["money"].ToString());
 
             balance += Stash;
 
             balance = Decimal.Round(balance, 2);
 
-            File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Money.Ren", balance.ToString());
+            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["money"] = balance.ToString();
+
+            File.WriteAllText("config.json", json.ToString());
 
             DiscordEmbedBuilder responseEmbed = new DiscordEmbedBuilder()
             {
@@ -154,7 +161,9 @@ namespace RenBotSharp
         [SlashCommand("steal", "Lets you steal ℝ from someone. Less effective against poorer people. :3")]
         private async Task Steal(InteractionContext ctx, [Option("user", "Who to steal from")] DiscordUser user)
         {
-            if (!Directory.Exists($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}"))
+            JObject json = JObject.Parse(File.ReadAllText("config.json"));
+
+            if (json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()] == null)
             {
                 DiscordEmbedBuilder bembed = new DiscordEmbedBuilder()
                 {
@@ -167,7 +176,7 @@ namespace RenBotSharp
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(bembed));
                 return;
             }
-            else if (!Directory.Exists($"{Environment.CurrentDirectory}/Bank/{user.Id}"))
+            else if (json["servers"][ctx.Guild.Id.ToString()]["bank"][user.Id.ToString()] == null)
             {
                 DiscordEmbedBuilder bembed = new DiscordEmbedBuilder()
                 {
@@ -190,7 +199,7 @@ namespace RenBotSharp
             DateTime currentTime = DateTime.UtcNow;
             long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
 
-            long cooldown = Convert.ToInt64(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/StealCooldown.Ren"));
+            long cooldown = Convert.ToInt64(json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["steal_cooldown"].ToString());
 
             if (cooldown > unixTime)
             {
@@ -198,7 +207,7 @@ namespace RenBotSharp
                 return;
             }
 
-            decimal VictimMoney = Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{user.Id}/Money.Ren"));
+            decimal VictimMoney = Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][user.Id.ToString()]["money"].ToString());
             
             if (VictimMoney == 0)
             {
@@ -212,13 +221,13 @@ namespace RenBotSharp
 
                 VictimMoney -= AmountToSteal;
 
-                decimal TheifMoney = Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Money.Ren"));
+                decimal TheifMoney = Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["money"].ToString());
 
                 TheifMoney += AmountToSteal;
 
-                File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{user.Id}/Money.Ren", Decimal.Round(VictimMoney, 2).ToString());
+                json["servers"][ctx.Guild.Id.ToString()]["bank"][user.Id.ToString()]["money"] = Decimal.Round(VictimMoney, 2).ToString();
 
-                File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Money.Ren", Decimal.Round(TheifMoney, 2).ToString());
+                json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["money"] = Decimal.Round(TheifMoney, 2).ToString();
 
                 DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
                 {
@@ -233,7 +242,9 @@ namespace RenBotSharp
 
                 embed.AddField("You're now on cooldown for", "300 seconds");
 
-                File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/StealCooldown.Ren", (unixTime + 300).ToString());
+                json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["steal_cooldown"] = (unixTime + 300).ToString();
+
+                File.WriteAllText("config.json", json.ToString());
 
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(embed));
             }
@@ -249,7 +260,9 @@ namespace RenBotSharp
 
                 embed.AddField("You're now on cooldown for", "60 seconds");
 
-                File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/StealCooldown.Ren", (unixTime + 60).ToString());
+                json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["steal_cooldown"] = (unixTime + 60).ToString();
+
+                File.WriteAllText("config.json", json.ToString());
 
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(embed));
             }
@@ -262,15 +275,17 @@ namespace RenBotSharp
         [SlashCommand("leaderboard", "Shows the top 10 richest people in the server")]
         private async Task Leaderboard(InteractionContext ctx)
         {
+            JObject json = JObject.Parse(File.ReadAllText("config.json"));
+            
             try
             {
                 Dictionary<ulong, decimal> UserAndMoney = new Dictionary<ulong, decimal>();
 
-                foreach (string id in Directory.EnumerateDirectories($"{Environment.CurrentDirectory}/Bank"))
+                foreach (var account in (JObject)json["servers"][ctx.Guild.Id.ToString()]["bank"])
                 {
-                    if (ctx.Guild.Members.ContainsKey(Convert.ToUInt64(Path.GetFileName(id))))
+                    if (ctx.Guild.Members.ContainsKey(ulong.Parse(account.Key)))
                     {
-                        UserAndMoney[Convert.ToUInt64(Path.GetFileName(id))] = Decimal.Round(Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{Path.GetFileName(id)}/Money.Ren")) + Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{Path.GetFileName(id)}/Safe.Ren")), 2);
+                        UserAndMoney[ulong.Parse(account.Key)] = Decimal.Round(Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][account.Key]["money"].ToString()) + Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][account.Key]["safe"].ToString()), 2);
                     }
                 }
 
@@ -300,7 +315,9 @@ namespace RenBotSharp
         [SlashCommand("deposit", "Desposit all your ℝ into your Safe")]
         private async Task Deposit(InteractionContext ctx)
         {
-            if (!Directory.Exists($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}"))
+            JObject json = JObject.Parse(File.ReadAllText("config.json"));
+
+            if (json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()] == null)
             {
                 DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
                 {
@@ -317,7 +334,7 @@ namespace RenBotSharp
             DateTime currentTime = DateTime.UtcNow;
             long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
 
-            long cooldown = Convert.ToInt64(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/SafeCooldown.Ren"));
+            long cooldown = Convert.ToInt64(json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe_cooldown"].ToString());
 
             if (cooldown > unixTime)
             {
@@ -325,15 +342,17 @@ namespace RenBotSharp
                 return;
             }
 
-            decimal balance = Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Money.Ren"));
-            decimal safe = Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Safe.Ren"));
+            decimal balance = Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["money"].ToString());
+            decimal safe = Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe"].ToString());
 
             safe += balance;
 
-            File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Safe.Ren", Decimal.Round(safe, 2).ToString());
-            File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Money.Ren", "0.00");
+            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe"] = Decimal.Round(safe, 2).ToString();
+            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["money"] = "0.00";
 
-            File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/SafeCooldown.Ren", (unixTime + 60000).ToString());
+            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe_cooldown"] = (unixTime + 60000).ToString();
+
+            File.WriteAllText("config.json", json.ToString());
 
             DiscordEmbedBuilder responseEmbed = new DiscordEmbedBuilder()
             {
@@ -350,7 +369,9 @@ namespace RenBotSharp
         [SlashCommand("safedraw", "Draw all your ℝ from your Safe")]
         private async Task SafeDraw(InteractionContext ctx)
         {
-            if (!Directory.Exists($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}"))
+            JObject json = JObject.Parse(File.ReadAllText("config.json"));
+
+            if (json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()] == null)
             {
                 DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
                 {
@@ -367,7 +388,7 @@ namespace RenBotSharp
             DateTime currentTime = DateTime.UtcNow;
             long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
 
-            long cooldown = Convert.ToInt64(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/SafeCooldown.Ren"));
+            long cooldown = Convert.ToInt64(json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe_cooldown"].ToString());
 
             if (cooldown > unixTime)
             {
@@ -375,15 +396,17 @@ namespace RenBotSharp
                 return;
             }
 
-            decimal balance = Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Money.Ren"));
-            decimal safe = Convert.ToDecimal(File.ReadAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Safe.Ren"));
+            decimal balance = Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["money"].ToString());
+            decimal safe = Convert.ToDecimal(json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe"].ToString());
 
             balance += safe;
 
-            File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Safe.Ren", "0.00");
-            File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/Money.Ren", Decimal.Round(balance, 2).ToString());
+            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe"] = "0.00";
+            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["money"] = Decimal.Round(balance, 2).ToString();
 
-            File.WriteAllText($"{Environment.CurrentDirectory}/Bank/{ctx.User.Id}/SafeCooldown.Ren", (unixTime + 60000).ToString());
+            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe_cooldown"] = (unixTime + 60000).ToString();
+
+            File.WriteAllText("config.json", json.ToString());
 
             DiscordEmbedBuilder responseEmbed = new DiscordEmbedBuilder()
             {
