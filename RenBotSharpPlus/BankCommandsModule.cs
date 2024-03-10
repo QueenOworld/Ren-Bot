@@ -121,6 +121,10 @@ namespace RenBotSharp
 
             json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["money"] = balance.ToString();
 
+            long cooldown = BankService.GetCooldown(Stash);
+
+            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe_cooldown"] = (unixTime + cooldown).ToString();
+
             File.WriteAllText("config.json", json.ToString());
 
             DiscordEmbedBuilder responseEmbed = new DiscordEmbedBuilder()
@@ -130,6 +134,8 @@ namespace RenBotSharp
                 Color = new DiscordColor(String.Format("#{0:X6}", RandomNumberGenerator.GetInt32(0, 0x1000000))),
                 Footer = new DiscordEmbedBuilder.EmbedFooter() { IconUrl = ctx.User.AvatarUrl }
             };
+
+            responseEmbed.AddField("You're now on safe cooldown", $"For {cooldown} seconds");
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(responseEmbed));
         }
@@ -350,7 +356,7 @@ namespace RenBotSharp
             json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe"] = Decimal.Round(safe, 2).ToString();
             json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["money"] = "0.00";
 
-            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe_cooldown"] = (unixTime + 60000).ToString();
+            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe_cooldown"] = (unixTime + 6000).ToString();
 
             File.WriteAllText("config.json", json.ToString());
 
@@ -363,6 +369,8 @@ namespace RenBotSharp
             };
 
             responseEmbed.AddField("In Safe", Decimal.Round(safe, 2).ToString());
+
+            responseEmbed.AddField("You're now on safe cooldown", $"For 6000 seconds");
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(responseEmbed));
         }
@@ -404,7 +412,7 @@ namespace RenBotSharp
             json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe"] = "0.00";
             json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["money"] = Decimal.Round(balance, 2).ToString();
 
-            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe_cooldown"] = (unixTime + 60000).ToString();
+            json["servers"][ctx.Guild.Id.ToString()]["bank"][ctx.User.Id.ToString()]["safe_cooldown"] = (unixTime + 6000).ToString();
 
             File.WriteAllText("config.json", json.ToString());
 
@@ -417,6 +425,8 @@ namespace RenBotSharp
             };
 
             responseEmbed.AddField("In Balance", Decimal.Round(balance, 2).ToString());
+
+            responseEmbed.AddField("You're now on safe cooldown", $"For 6000 seconds");
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(responseEmbed));
         }

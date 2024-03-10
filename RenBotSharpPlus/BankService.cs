@@ -29,6 +29,10 @@ namespace RenBotSharp
 {
     public static class BankService
     {
+        public static long GetCooldown(decimal money)
+        {
+            return (long)DecimalEx.Log2(((money/10000)+1))*1000;
+        }
         public static decimal GetCurrentValue()
         {
             DateTime currentTime = DateTime.UtcNow;

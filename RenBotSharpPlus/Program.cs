@@ -132,7 +132,7 @@ namespace RenBotSharp
                 {
                     if ((bool)json["servers"][e.Guild.Id.ToString()]["talky"])
                     {
-                        if (json["servers"][e.Guild.Id.ToString()]["talky_whitelist"].ToList().Contains(e.Channel.Id.ToString()))
+                        if (json["servers"][e.Guild.Id.ToString()]["talky_whitelist"].ToObject<string[]>().Contains(e.Channel.Id.ToString()))
                         {
                             if (!e.Message.Author.IsBot)
                             {
