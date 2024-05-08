@@ -21,6 +21,7 @@ namespace RenBot
             }
         }
         private readonly ReadOnlyMemory<string> _DataSet_;
+        private readonly string EndingCharacters = ".?>~!]|})-+*;'\"";
 
         public string Query(string Input = "", int Length = 0)
         {
@@ -30,7 +31,7 @@ namespace RenBot
             }
             if (Length == 0)
             {
-                Length = RandomNumberGenerator.GetInt32(2, 12);
+                Length = RandomNumberGenerator.GetInt32(1, 6) + RandomNumberGenerator.GetInt32(0, 6);
             }
 
             List<string> InputData = Input.Replace('\n', ' ').Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -45,19 +46,27 @@ namespace RenBot
                 {
                     Guesses = Enumerable.Range(0, _DataSet_.Length - 1).AsParallel().Where(i => string.Equals(_DataSet_.Slice(i, 1).Span[0], LastInput, StringComparison.OrdinalIgnoreCase)).Select(i => _DataSet_.Slice(i + 1, 1).Span[0]).ToList();
 
-                    InputData.Add(Guesses[RandomNumberGenerator.GetInt32(0, Guesses.Count())]);
+                    LastInput = Guesses[RandomNumberGenerator.GetInt32(0, Guesses.Count())];
+
+                    if (LastInput.Contains("://"))
+                    {
+                        LastInput = Guesses[RandomNumberGenerator.GetInt32(0, Guesses.Count())];
+                    }
+
+                    InputData.Add(LastInput);
+
                     LastInput = InputData[^1];
 
                     if (UntilEnd < 1)
                     {
-                        if (LastInput.EndsWith(".") || LastInput.EndsWith("?") || LastInput.EndsWith("!") || LastInput.EndsWith(")") || LastInput.EndsWith(">") || LastInput.EndsWith("-") || LastInput.EndsWith("~") || LastInput.EndsWith("]") || LastInput.EndsWith("}") || LastInput.EndsWith(";"))
+                        if (EndingCharacters.Contains(LastInput[^1]))
                         {
                             End = true;
                         }
                     }
                     UntilEnd--;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Console.WriteLine(ex.ToString());
                     return "There was an error generating output...";
