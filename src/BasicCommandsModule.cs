@@ -300,10 +300,17 @@ namespace RenBot
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(string.Join(' ', strings)));
         }
         [SlashCommand("markov", "Generates a sentence using a markov chain fueled by YOU!")]
-        public async Task GenerateMarkov(InteractionContext ctx)
+        public async Task GenerateMarkov(InteractionContext ctx, [Option("input", "initial input paramter (default: blank)")] string input = "")
         {
             await ctx.DeferAsync().ConfigureAwait(false);
-            await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().WithContent(_markov.Query()));
+            if (string.IsNullOrEmpty(input))
+            {
+                await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().WithContent(_markov.Query()));
+            }
+            else
+            {
+                await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().WithContent($"initial input: {input}\n---\n" + _markov.Query(input)));
+            }
         }
         [SlashCommand("generaterandomnumber", "Generates a random number within a range")]
         private async Task GenRandomNumber(InteractionContext ctx, [Option("lower-bound", "minimum of idfk")] double lower, [Option("upper-bound", "maximum of idfk")] double upper)
