@@ -373,3 +373,6 @@ config.json
 
 # nohup logs from Lavalink
 nohup.out
+
+# dataset
+dataset.txt

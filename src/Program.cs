@@ -109,6 +109,7 @@ file sealed class ApplicationHost : BackgroundService
         slash.RegisterCommands<BasicCommands>();
         slash.RegisterCommands<AudioCommands>();
         slash.RegisterCommands<BankCommands>();
+        slash.RegisterCommands<ImageCommands>();
 
         _discordClient.MessageDeleted += async (s, e) =>
             {
