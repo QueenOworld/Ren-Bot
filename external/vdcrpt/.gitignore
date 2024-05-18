@@ -1,0 +1,14 @@
+.idea/
+.vscode/
+.vs/
+
+bin/
+obj/
+
+*.user
+
+*.vdcrpt-data
+*.mp4
+
+temp/
+dist/
