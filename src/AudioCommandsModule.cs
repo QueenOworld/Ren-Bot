@@ -144,21 +144,22 @@ public class AudioCommands : ApplicationCommandModule
             return;
         }
 
-        for (long i = 0; i < loops; i++) {
+        for (long i = 0; i < loops; i++)
+        {
             var position = await player
                 .PlayAsync(track, queue)
                 .ConfigureAwait(false);
 
-            if (position is 0)
+            if (position is 0 && i == 0)
             {
                 await ctx
-                    .FollowUpAsync(new DiscordFollowupMessageBuilder().WithContent($"Now Playing: {track.Uri}"))
+                    .FollowUpAsync(new DiscordFollowupMessageBuilder().WithContent($"Now Playing: {track.Uri} {((loops > 1) ? $"(Queued {loops} times)" : string.Empty)}"))
                     .ConfigureAwait(false);
             }
-            else
+            else if (i == 0)
             {
                 await ctx
-                    .FollowUpAsync(new DiscordFollowupMessageBuilder().WithContent($"{ctx.Member.DisplayName} Added to queue: {track.Uri}"))
+                    .FollowUpAsync(new DiscordFollowupMessageBuilder().WithContent($"{ctx.Member.DisplayName} Added to queue: {track.Uri} {((loops > 1) ? $"(Queued {loops} times)" : string.Empty)}"))
                     .ConfigureAwait(false);
             }
         }
