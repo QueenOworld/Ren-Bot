@@ -140,7 +140,7 @@ file sealed class ApplicationHost : BackgroundService
         {
             if (e.Message.Author.Id != 798285857340522496)
             {
-                if (e.Guild.Id == 899811497121828914) {
+                if (e.Guild.Id == 899811497121828914 || e.Guild.Id == 1225173980173045861) {
                     if (e.Channel.Id == 1234259364479504404) {
                         File.AppendAllText("./dataset.txt", e.Message.Content + "\n");
                     }
