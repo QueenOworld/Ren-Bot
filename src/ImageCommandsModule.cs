@@ -16,6 +16,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors.Quantization;
 using Vdcrpt;
 using Vdcrpt.Desktop;
 
@@ -132,6 +133,39 @@ namespace RenBot
             }
 
         }
+        [SlashCommand("deepfry", "Deepfries an image")]
+        private async Task Deepfry(InteractionContext ctx, [Option("image", "image to manipulate")] DiscordAttachment attachment)
+        {
+            if (attachment.MediaType.Contains("image") && !attachment.MediaType.Contains("gif"))
+            {
+                HttpResponseMessage httpResponse = await _httpClient.GetAsync(attachment.Url);
+
+                using (Stream inStream = await httpResponse.Content.ReadAsStreamAsync())
+                {
+                    using (var image = Image.Load(inStream))
+                    {
+                        image.Mutate(x => x.Contrast(2.4f));
+                        image.Mutate(x => x.Quantize(KnownQuantizers.Wu));
+                        image.Mutate(x => x.Saturate(2.4f));
+                        await image.SaveAsync($"./tmp/{attachment.FileName}", new JpegEncoder() { Quality = 3 });
+                    }
+                }
+
+                using (FileStream outStream = new FileStream($"./tmp/{attachment.FileName}", FileMode.Open))
+                {
+                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
+                                              .WithContent("Here is your deepfried image!").AddFile(attachment.FileName, outStream));
+                }
+
+                File.Delete($"./tmp/{attachment.FileName}");
+            }
+            else
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
+                        .WithContent("The file you provided is not an image").AsEphemeral());
+            }
+
+        }
         [SlashCommand("quote", "Generates a beautiful inspirational quote")]
         private async Task Quote(InteractionContext ctx)
         {
@@ -168,7 +202,6 @@ namespace RenBot
                 }
 
                 File.Delete($"./tmp/{tempName.ToString()}.png");
-
             }
             catch (Exception ex)
             {

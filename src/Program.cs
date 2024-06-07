@@ -1,24 +1,24 @@
 ﻿using System;
+using System.Data;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
+using System.Web;
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
-using RenBot;
 using Lavalink4NET.Extensions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 using Microsoft.Extensions.Configuration;
-using DSharpPlus.Entities;
-using System.Data;
-using System.Text.RegularExpressions;
-using System.Web;
-using System.Security.Cryptography;
-using System.Timers;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RenBot;
 
 var builder = new HostApplicationBuilder(args);
 
@@ -102,6 +102,11 @@ file sealed class ApplicationHost : BackgroundService
             File.WriteAllText("../config.json", JObject.Parse("""{"startup": "0", "word": "", "servers": {}, }""").ToString());
         }
 
+        if (!Directory.Exists("./tmp/"))
+        {
+            Directory.CreateDirectory("./tmp/");
+        }
+
         JObject json = JObject.Parse(File.ReadAllText("../config.json"));
 
         var slash = _discordClient.UseSlashCommands(new SlashCommandsConfiguration { Services = _serviceProvider });
@@ -140,12 +145,15 @@ file sealed class ApplicationHost : BackgroundService
         {
             if (e.Message.Author.Id != 798285857340522496)
             {
-                if (e.Guild.Id == 899811497121828914 || e.Guild.Id == 1225173980173045861) {
-                    if (e.Channel.Id == 1234259364479504404) {
+                if (e.Guild.Id == 899811497121828914 || e.Guild.Id == 1225173980173045861)
+                {
+                    if (e.Channel.Id == 1234259364479504404)
+                    {
                         File.AppendAllText("./dataset.txt", e.Message.Content + "\n");
                     }
                 }
-                else {
+                else
+                {
                     File.AppendAllText("./dataset.txt", e.Message.Content + "\n");
                 }
 
@@ -395,6 +403,13 @@ file sealed class ApplicationHost : BackgroundService
         }
 
         File.WriteAllText("../config.json", json.ToString());
+
+        await Task.Delay(1000, stoppingToken);
+
+        await UpdateStatusAsync();
+        System.Timers.Timer timer = new System.Timers.Timer(TimeSpan.FromMinutes(1));
+        timer.Elapsed += async (s, e) => await UpdateStatusAsync();
+        timer.Start();
 
         await Task
             .Delay(Timeout.InfiniteTimeSpan, stoppingToken)

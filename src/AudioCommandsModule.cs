@@ -600,4 +600,28 @@ public class AudioCommands : ApplicationCommandModule
 
         return result.Player;
     }
+    [SlashCommand("reverb", description: "Adds reverb effect music")]
+    public async Task Reverb(InteractionContext ctx)
+    {
+        await ctx.DeferAsync().ConfigureAwait(false);
+
+        var player = await GetPlayerAsync(ctx, connectToVoiceChannel: true).ConfigureAwait(false);
+
+        if (player is null)
+        {
+            return;
+        }
+
+        // Check if the player is playing
+        if (player.CurrentTrack is null)
+        {
+            // If the player is not playing, we send an error message to the user
+            await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().WithContent("Nothing playing!"));
+            return;
+        }
+
+        // Stop the player and send a message to the user
+        await player.StopAsync().ConfigureAwait(false);
+        await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().WithContent($"{ctx.Member.DisplayName} stopped the player!"));
+    }
 }
