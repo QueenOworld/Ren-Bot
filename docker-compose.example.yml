@@ -1,0 +1,37 @@
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    volumes:
+      # make sure the text files exist *before* launching the container, otherwise they'll be created as empty directories
+      - ./.token:/app/.token:ro
+      - ./config.json:/app/config.json
+      - ./dataset.txt:/app/dataset.txt
+    environment:
+      LAVALINK_URL: "http://lavalink:2333"
+      LAVALINK_PASS: "youshallnotpass"
+    depends_on:
+      - lavalink
+
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4
+    restart: unless-stopped
+    environment:
+      # _JAVA_OPTIONS: "-Xmx1G"
+      SERVER_PORT: "2333"
+      LAVALINK_SERVER_PASSWORD: "youshallnotpass"
+
+      # Install the updated YouTube source and provide default configuration.
+      # Instead of changing these here, it is recommended to remove these options
+      # and to mount a Lavalink configuration file instead.
+      # See https://github.com/lavalink-devs/youtube-source?tab=readme-ov-file#plugin
+      LAVALINK_PLUGINS_0_DEPENDENCY: "dev.lavalink.youtube:youtube-plugin:1.3.0"
+      LAVALINK_SERVER_SOURCES_YOUTUBE: "false" # Disable the built in YouTube source
+      PLUGINS_YOUTUBE_ENABLED: "true"
+      PLUGINS_YOUTUBE_ALLOWSEARCH: "true"
+      PLUGINS_YOUTUBE_CLIENTS_0: MUSIC # Only for YTM search, can't do playback
+      PLUGINS_YOUTUBE_CLIENTS_1: ANDROID
+      PLUGINS_YOUTUBE_CLIENTS_2: WEB
+      PLUGINS_YOUTUBE_CLIENTS_3: TVHTML5EMBEDDED # Allegedly helps with playing some age restricted videos
+    # volumes:
+    #   - ./application.yml:/opt/Lavalink/application.yml:ro
