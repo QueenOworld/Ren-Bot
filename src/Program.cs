@@ -49,6 +49,12 @@ builder.Services.AddMemoryCache();
 // Logging
 builder.Services.AddLogging(s => s.AddConsole().SetMinimumLevel(LogLevel.Trace));
 
+// We need to be able to change the lavalink URL in Docker
+builder.Services.ConfigureLavalink(config => {
+    config.BaseAddress = new Uri(Environment.GetEnvironmentVariable("LAVALINK_URL") ?? "http://localhost:2333");
+    config.Passphrase = Environment.GetEnvironmentVariable("LAVALINK_PASS") ?? config.Passphrase;
+});
+
 builder.Build().Run();
 
 file sealed class ApplicationHost : BackgroundService

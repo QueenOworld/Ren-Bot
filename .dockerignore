@@ -1,0 +1,6 @@
+.token
+config.json
+dataset.txt
+application.yml
+src/bin
+src/obj

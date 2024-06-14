@@ -376,3 +376,9 @@ nohup.out
 
 # dataset
 dataset.txt
+
+# lavalink config
+application.yml
+
+# don't commit the customized docker-compose config, only the template
+docker-compose.yml
