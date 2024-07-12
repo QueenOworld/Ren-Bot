@@ -1,11 +1,11 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Data;
+﻿using System.Data;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Web;
 using System.Security.Cryptography;
+using System.Web;
 using DecimalMath;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace RenBot
 {
@@ -13,18 +13,18 @@ namespace RenBot
     {
         public static long GetCooldown(decimal money)
         {
-            return (long)DecimalEx.Log2(((money/10000)+1))*1000;
+            return (long)DecimalEx.Log2(((money / 10000) + 1)) * 1000;
         }
         public static decimal GetCurrentValue()
         {
             DateTime currentTime = DateTime.UtcNow;
             long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
 
-            return DecimalEx.Sin(unixTime / 25400 + DecimalEx.Cos(unixTime/14640)) + 0.1m;
+            return DecimalEx.Sin(unixTime / 25400 + DecimalEx.Cos(unixTime / 14640)) + 0.1m;
         }
-        public static decimal CalculateAmountToSteal(decimal balance) 
+        public static decimal CalculateAmountToSteal(decimal balance)
         {
-            return DecimalEx.Log2(balance) * (balance/100);
+            return DecimalEx.Log2(balance) * (balance / 100);
         }
         public static bool SuccessfulSteal(decimal balance)
         {

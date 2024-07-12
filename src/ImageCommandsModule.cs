@@ -166,6 +166,34 @@ namespace RenBot
             }
 
         }
+        [SlashCommand("corrupt", "Corrupts a file")]
+        private async Task Corrupt(InteractionContext ctx, [Option("file", "File to corrupt (up to 10 MB)")] DiscordAttachment attachment, [Option("intensity", "Intensity of corruption, ranging from 1-1000 (default:10)")] long intensity = 10)
+        {
+            if (intensity < 1 || intensity > 1000)
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Intensity is not in the range of 1 to 1000").AsEphemeral());
+                return;
+            }
+
+            if (attachment.FileSize > 10000000)
+            {
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("File can't be higher than 10 MB").AsEphemeral());
+                return;
+            }
+
+            await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder());
+
+            HttpResponseMessage a = await _httpClient.GetAsync(attachment.Url);
+
+            byte[] fileBytes = await a.Content.ReadAsByteArrayAsync();
+
+            for (int i = 0; i < intensity; i++)
+            {
+                fileBytes[System.Security.Cryptography.RandomNumberGenerator.GetInt32(0, fileBytes.Length)] = System.Security.Cryptography.RandomNumberGenerator.GetBytes(1)[0];
+            }
+
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Here is your corrupted file!").AddFile(attachment.FileName, new MemoryStream(fileBytes)));
+        }
         [SlashCommand("quote", "Generates a beautiful inspirational quote")]
         private async Task Quote(InteractionContext ctx)
         {

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 
-namespace Vdcrpt.Desktop {
+namespace Vdcrpt.Desktop
+{
     public class Preset
     {
         public string Name { get; init; } = string.Empty;
